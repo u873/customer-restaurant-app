@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "568592204259",
+    "project_id": "salatspot-e08c3",
+    "storage_bucket": "salatspot-e08c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568592204259:android:92b25fd4d3ab74f95420d6",
+        "android_client_info": {
+          "package_name": "com.example.customer_estaurant_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "568592204259-k808qr3cuna1bmorqatvot9s06buttk1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.customer_estaurant_app",
+            "certificate_hash": "a495cd0e32c61bec33d2f17828e58edab10bf3ee"
+          }
+        },
+        {
+          "client_id": "568592204259-i2ngjvchsl1a4tnui6dut72146vtlka0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXKlWle0-9J-TOpH8AfAXcCEWULQa5bb4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "568592204259-i2ngjvchsl1a4tnui6dut72146vtlka0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568592204259:android:e6d3cfce8762d0f75420d6",
+        "android_client_info": {
+          "package_name": "com.example.practice_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "568592204259-i2ngjvchsl1a4tnui6dut72146vtlka0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXKlWle0-9J-TOpH8AfAXcCEWULQa5bb4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "568592204259-i2ngjvchsl1a4tnui6dut72146vtlka0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
