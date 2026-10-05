@@ -1,4 +1,5 @@
 import 'package:customer_estaurant_app/core/theme/app_colors.dart';
+import 'package:customer_estaurant_app/core/theme/app_text_styles.dart';
 import 'package:customer_estaurant_app/features/cart/model/cart_item.dart';
 import 'package:customer_estaurant_app/features/menu/controller/menu_controller.dart';
 import 'package:customer_estaurant_app/features/menu/model/main_data_response.dart';
@@ -25,8 +26,14 @@ class SeeAllScreen extends StatefulWidget {
 
 class _SeeAllScreenState extends State<SeeAllScreen> {
   final ScrollController _scrollController = ScrollController();
+
   final ValueNotifier<int> _selectedCategory = ValueNotifier<int>(0);
+
+  // Vertical menu category section keys
   final Map<int, GlobalKey> _categoryKeys = {};
+
+  // Horizontal category bar keys
+  final Map<int, GlobalKey> _categoryBarKeys = {};
 
   bool _isCategoryScrolling = false;
 
@@ -34,17 +41,28 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
     return _categoryKeys.putIfAbsent(index, () => GlobalKey());
   }
 
+  GlobalKey _getCategoryBarKey(int index) {
+    return _categoryBarKeys.putIfAbsent(index, () => GlobalKey());
+  }
+
   @override
   void initState() {
     super.initState();
+
     _scrollController.addListener(_onScroll);
+
+    _selectedCategory.addListener(_onSelectedCategoryChanged);
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
+
+    _selectedCategory.removeListener(_onSelectedCategoryChanged);
+
     _scrollController.dispose();
     _selectedCategory.dispose();
+
     super.dispose();
   }
 
@@ -56,6 +74,33 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
     }
 
     return double.tryParse(value.toString()) ?? 0.0;
+  }
+
+  void _onSelectedCategoryChanged() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _scrollSelectedCategoryIntoView();
+    });
+  }
+
+  void _scrollSelectedCategoryIntoView() {
+    final selectedIndex = _selectedCategory.value;
+
+    final key = _categoryBarKeys[selectedIndex];
+
+    if (key?.currentContext == null) {
+      return;
+    }
+
+    Scrollable.ensureVisible(
+      key!.currentContext!,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+
+      // Selected category ko center mein lana
+      alignment: 0.5,
+    );
   }
 
   void _onScroll() {
@@ -91,12 +136,29 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
   }
 
   void _onCategorySelected(int index, List<RestaurantBranchMenu> categories) {
-    if (_selectedCategory.value == index) return;
+    if (_selectedCategory.value == index) {
+      // Even if already selected, make sure it is visible/centered.
+      _scrollSelectedCategoryIntoView();
+
+      if (index == 0) {
+        _scrollToTop();
+
+        return;
+      }
+    }
 
     _selectedCategory.value = index;
 
+    // Category bar ko selected item par center karo.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _scrollSelectedCategoryIntoView();
+    });
+
     if (index == 0) {
       _scrollToTop();
+
       return;
     }
 
@@ -110,9 +172,16 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
       key!.currentContext!,
       duration: const Duration(milliseconds: 450),
       curve: Curves.easeInOut,
+
+      // Vertical menu mein category heading ko top ke qareeb rakho.
       alignment: 0.05,
     ).whenComplete(() {
       _isCategoryScrolling = false;
+
+      // Scroll complete hone ke baad category bar ko dobara center.
+      if (mounted) {
+        _scrollSelectedCategoryIntoView();
+      }
     });
   }
 
@@ -129,6 +198,10 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
         )
         .whenComplete(() {
           _isCategoryScrolling = false;
+
+          if (mounted) {
+            _scrollSelectedCategoryIntoView();
+          }
         });
   }
 
@@ -199,7 +272,10 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${item.name} added to cart'),
+        content: Text(
+          '${item.name} added to cart',
+          style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+        ),
         duration: const Duration(seconds: 1),
         behavior: SnackBarBehavior.floating,
       ),
@@ -210,6 +286,7 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
     // DEAL
     if (item.isDeal == 1 || item.isDeal == true) {
       widget.onDealTap(item);
+
       return;
     }
 
@@ -220,6 +297,7 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
     // ITEM WITH OPTIONS
     if (hasVariations || hasChoices) {
       widget.onProductTap(item, widget.onClose);
+
       return;
     }
 
@@ -256,29 +334,33 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
 
               final bool selected = selectedIndex == index;
 
-              return GestureDetector(
-                onTap: () {
-                  _onCategorySelected(index, categories);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 17),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppColors.primary
-                        : const Color(0xff242529),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: selected ? AppColors.primary : Colors.white10,
+              return Container(
+                key: _getCategoryBarKey(index),
+                child: GestureDetector(
+                  onTap: () {
+                    _onCategorySelected(index, categories);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 17),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppColors.primary
+                          : const Color(0xff242529),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: selected ? AppColors.primary : Colors.white10,
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      color: selected ? Colors.white : Colors.white70,
-                      fontSize: 11,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    child: Text(
+                      title,
+                      style: AppTextStyles.small.copyWith(
+                        color: selected ? Colors.white : Colors.white70,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
                     ),
                   ),
                 ),
@@ -362,10 +444,8 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
                             item.name,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: AppTextStyles.title.copyWith(
                               color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -378,9 +458,8 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
                         item.description!,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: AppTextStyles.bodySecondary.copyWith(
                           color: Colors.white60,
-                          fontSize: 11,
                           height: 1.3,
                         ),
                       ),
@@ -394,9 +473,8 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
                         Expanded(
                           child: Text(
                             'Rs. ${price.toStringAsFixed(0)}',
-                            style: TextStyle(
+                            style: AppTextStyles.price.copyWith(
                               color: AppColors.primary,
-                              fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -460,13 +538,10 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
                 Expanded(
                   child: Text(
                     category.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppTextStyles.heading.copyWith(color: Colors.white),
                   ),
                 ),
+
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 9,
@@ -478,7 +553,7 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
                   ),
                   child: Text(
                     '${category.menu.length} items',
-                    style: const TextStyle(color: Colors.white54, fontSize: 10),
+                    style: AppTextStyles.small.copyWith(color: Colors.white54),
                   ),
                 ),
               ],
@@ -549,13 +624,11 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
 
                   const SizedBox(width: 14),
 
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'See All',
-                      style: TextStyle(
+                      style: AppTextStyles.heading.copyWith(
                         color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -572,9 +645,8 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
                       ),
                       child: Text(
                         '$totalItems items',
-                        style: const TextStyle(
+                        style: AppTextStyles.small.copyWith(
                           color: Colors.white60,
-                          fontSize: 10,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -597,10 +669,12 @@ class _SeeAllScreenState extends State<SeeAllScreen> {
               child: provider.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : categories.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
                         'No menu items available',
-                        style: TextStyle(color: Colors.white54),
+                        style: AppTextStyles.bodySecondary.copyWith(
+                          color: Colors.white54,
+                        ),
                       ),
                     )
                   : ListView(

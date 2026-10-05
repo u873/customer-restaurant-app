@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../address/controller/address_controller.dart';
 import '../../address/model/customer_address.dart';
 import '../../auth/controller/auth_controller.dart';
@@ -94,6 +95,13 @@ class _CheckoutContentState extends State<_CheckoutContent> {
           authController.isLoggedIn || authController.isGuest;
 
       if (canUseCustomerFeatures) {
+        // First-launch par locally saved address ko
+        // backend par sync karo.
+        await addressController.syncLocalAddressToBackend();
+
+        if (!mounted) return;
+
+        // Backend se latest addresses load karo.
         await addressController.getCustomerAddresses();
 
         if (!mounted) return;
@@ -182,6 +190,140 @@ class _CheckoutContentState extends State<_CheckoutContent> {
         'unit_price': item.selectedPrice,
       };
     }).toList();
+  }
+
+  Future<void> _showSavedAddresses() async {
+    final addressController = context.read<AddressController>();
+    final checkoutController = context.read<CheckoutController>();
+
+    // Ensure latest saved addresses are loaded.
+    if (addressController.addresses.isEmpty) {
+      await addressController.getCustomerAddresses();
+    }
+
+    if (!mounted) return;
+
+    if (addressController.addresses.isEmpty) {
+      _showMessage("No saved addresses found. Please add an address first.");
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.cardBackground,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Select Delivery Address",
+                  style: AppTextStyles.title.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: addressController.addresses.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final address = addressController.addresses[index];
+                      final isSelected =
+                          (checkoutController.selectedAddress?.id ??
+                              addressController.selectedAddress?.id) ==
+                          address.id;
+
+                      return Material(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () async {
+                            addressController.selectAddress(address);
+                            checkoutController.setSelectedAddress(address);
+
+                            Navigator.pop(sheetContext);
+
+                            await context
+                                .read<MenuProvider>()
+                                .setDeliveryLocation(
+                                  address: address.address1,
+                                  lat: address.latitude,
+                                  lng: address.longitude,
+                                  orderAmount: context
+                                      .read<CartProvider>()
+                                      .subtotal,
+                                );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : AppColors.border,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on_rounded,
+                                  color: AppColors.primary,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _getAddressTypeName(address),
+                                        style: AppTextStyles.body.copyWith(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        address.address1,
+                                        style: AppTextStyles.small.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (isSelected)
+                                  const Icon(
+                                    Icons.check_circle_rounded,
+                                    color: AppColors.primary,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _applyCoupon() async {
@@ -326,6 +468,22 @@ class _CheckoutContentState extends State<_CheckoutContent> {
 
     final isDelivery = menuProvider.selectedOrderType == OrderType.delivery;
 
+    if (isDelivery) {
+      final synced = await addressController.syncLocalAddressToBackend();
+
+      if (!synced) {
+        _showMessage(
+          addressController.errorMessage ??
+              "Unable to save delivery address. Please try again.",
+        );
+        return;
+      }
+
+      await addressController.getCustomerAddresses();
+
+      if (!mounted) return;
+    }
+
     final address =
         checkoutController.selectedAddress ?? addressController.selectedAddress;
 
@@ -358,9 +516,19 @@ class _CheckoutContentState extends State<_CheckoutContent> {
 
     final taxBase = (subtotal - promotionDiscount).clamp(0.0, subtotal);
 
-    final tax = taxBase * 16 / 116;
+    final taxPercent =
+        double.tryParse(menuProvider.menuResponse?.data.taxPercent ?? "0") ?? 0;
 
-    final grandTotal = subtotal - promotionDiscount + deliveryCharge + tax;
+    final isTaxIncluded =
+        menuProvider.menuResponse?.data.taxInclude ?? false;
+
+    final tax = isTaxIncluded
+        ? taxBase * taxPercent / (100 + taxPercent)
+        : taxBase * taxPercent / 100;
+
+    final grandTotal = isTaxIncluded
+        ? subtotal - promotionDiscount + deliveryCharge
+        : subtotal - promotionDiscount + deliveryCharge + tax;
 
     double walletAmount = 0.0;
 
@@ -382,8 +550,8 @@ class _CheckoutContentState extends State<_CheckoutContent> {
       "discount_id": discountId,
       "coupon_id": couponId,
       "tax_amount": double.parse(tax.toStringAsFixed(2)),
-      "tax_percent": "16.00",
-      "tax_include": "1",
+      "tax_percent": taxPercent.toStringAsFixed(2),
+      "tax_include": isTaxIncluded ? "1" : "0",
       "delivery_charge": deliveryCharge.toStringAsFixed(2),
       "total": grandTotal.toStringAsFixed(2),
       "cash_amount": amountToPay.toStringAsFixed(2),
@@ -503,9 +671,19 @@ class _CheckoutContentState extends State<_CheckoutContent> {
 
     final taxBase = (subtotal - promotionDiscount).clamp(0.0, subtotal);
 
-    final tax = taxBase * 16 / 116;
+    final taxPercent =
+        double.tryParse(menuProvider.menuResponse?.data.taxPercent ?? "0") ?? 0;
 
-    final grandTotal = subtotal - promotionDiscount + deliveryCharges + tax;
+    final isTaxIncluded =
+        menuProvider.menuResponse?.data.taxInclude ?? false;
+
+    final tax = isTaxIncluded
+        ? taxBase * taxPercent / (100 + taxPercent)
+        : taxBase * taxPercent / 100;
+
+    final grandTotal = isTaxIncluded
+        ? subtotal - promotionDiscount + deliveryCharges
+        : subtotal - promotionDiscount + deliveryCharges + tax;
 
     final walletBalance = loyaltyProvider.walletAmount;
 
@@ -547,14 +725,7 @@ class _CheckoutContentState extends State<_CheckoutContent> {
           ),
         ),
 
-        title: const Text(
-          "Checkout",
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: Text("Checkout", style: AppTextStyles.title),
       ),
 
       body: SafeArea(
@@ -567,14 +738,7 @@ class _CheckoutContentState extends State<_CheckoutContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
 
             children: [
-              const Text(
-                "Order Type",
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text("Order Type", style: AppTextStyles.price),
 
               const SizedBox(height: 8),
 
@@ -622,11 +786,10 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                             borderRadius: BorderRadius.circular(20),
                           ),
 
-                          child: const Text(
+                          child: Text(
                             "Delivery",
-                            style: TextStyle(
+                            style: AppTextStyles.small.copyWith(
                               color: AppColors.textPrimary,
-                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -669,11 +832,10 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                             borderRadius: BorderRadius.circular(20),
                           ),
 
-                          child: const Text(
+                          child: Text(
                             "Pickup",
-                            style: TextStyle(
+                            style: AppTextStyles.small.copyWith(
                               color: AppColors.textPrimary,
-                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -687,106 +849,97 @@ class _CheckoutContentState extends State<_CheckoutContent> {
               const SizedBox(height: 18),
 
               if (isDelivery) ...[
-                const Text(
-                  "Delivery Address",
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Text("Delivery Address", style: AppTextStyles.price),
 
                 const SizedBox(height: 7),
 
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
+                GestureDetector(
+                  onTap: _showSavedAddresses,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
 
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: selectedAddress != null
-                          ? AppColors.primary
-                          : AppColors.border,
-                    ),
-                  ),
-
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.12),
-                          shape: BoxShape.circle,
-                        ),
-
-                        child: const Icon(
-                          Icons.location_on_rounded,
-                          color: AppColors.primary,
-                          size: 22,
-                        ),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: selectedAddress != null
+                            ? AppColors.primary
+                            : AppColors.border,
                       ),
+                    ),
 
-                      const SizedBox(width: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
 
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
 
-                          children: [
-                            Text(
-                              _getAddressTypeName(selectedAddress),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
 
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 11,
+                          child: const Icon(
+                            Icons.location_on_rounded,
+                            color: AppColors.primary,
+                            size: 22,
+                          ),
+                        ),
+
+                        const SizedBox(width: 10),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+
+                            children: [
+                              Text(
+                                _getAddressTypeName(selectedAddress),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+
+                                style: AppTextStyles.bodySecondary.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+
+                              const SizedBox(height: 4),
+
+                              Text(
+                                selectedAddress?.address1 ??
+                                    "Choose your delivery location",
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+
+                                style: AppTextStyles.small,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        GestureDetector(
+                          onTap: widget.onChangeAddress,
+
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 5),
+
+                            child: Text(
+                              "CHANGE",
+                              style: AppTextStyles.action.copyWith(
+                                fontSize: 10,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-
-                            const SizedBox(height: 4),
-
-                            Text(
-                              selectedAddress?.address1 ??
-                                  "Choose your delivery location",
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 9,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      GestureDetector(
-                        onTap: widget.onChangeAddress,
-
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 5),
-
-                          child: Text(
-                            "CHANGE",
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 8,
-                              fontWeight: FontWeight.w700,
-                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
@@ -834,12 +987,10 @@ class _CheckoutContentState extends State<_CheckoutContent> {
 
                         const SizedBox(width: 9),
 
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             "Coupon",
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 12,
+                            style: AppTextStyles.body.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -849,11 +1000,10 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                           GestureDetector(
                             onTap: _removeCoupon,
 
-                            child: const Text(
+                            child: Text(
                               "REMOVE",
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 8,
+                              style: AppTextStyles.action.copyWith(
+                                fontSize: 10,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -894,9 +1044,8 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
 
-                                style: const TextStyle(
+                                style: AppTextStyles.small.copyWith(
                                   color: AppColors.textPrimary,
-                                  fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -910,9 +1059,8 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                                   ? "${checkoutController.promotionDiscountPercent.toStringAsFixed(0)}% OFF"
                                   : "Rs ${checkoutController.promotionDiscountAmount.toStringAsFixed(0)} OFF",
 
-                              style: const TextStyle(
+                              style: AppTextStyles.small.copyWith(
                                 color: AppColors.primary,
-                                fontSize: 9,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -931,18 +1079,14 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                                 textCapitalization:
                                     TextCapitalization.characters,
 
-                                style: const TextStyle(
+                                style: AppTextStyles.bodySecondary.copyWith(
                                   color: AppColors.textPrimary,
-                                  fontSize: 10,
                                 ),
 
                                 decoration: InputDecoration(
                                   hintText: "Enter coupon code",
 
-                                  hintStyle: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 9,
-                                  ),
+                                  hintStyle: AppTextStyles.small,
 
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 11,
@@ -1011,10 +1155,10 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                                         color: AppColors.textOnPrimary,
                                       ),
                                     )
-                                  : const Text(
+                                  : Text(
                                       "Apply",
-                                      style: TextStyle(
-                                        fontSize: 9,
+                                      style: AppTextStyles.button.copyWith(
+                                        fontSize: 11,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -1026,15 +1170,12 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                       if (couponController.coupons.isNotEmpty) ...[
                         const SizedBox(height: 9),
 
-                        const Text(
+                        Text(
                           "Available",
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 8,
+                          style: AppTextStyles.small.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-
                         const SizedBox(height: 6),
 
                         SizedBox(
@@ -1109,9 +1250,8 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                                           Text(
                                             coupon.couponCode,
 
-                                            style: const TextStyle(
+                                            style: AppTextStyles.small.copyWith(
                                               color: AppColors.textPrimary,
-                                              fontSize: 8,
                                               fontWeight: FontWeight.w700,
                                             ),
                                           ),
@@ -1123,9 +1263,8 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                                                 ? "${coupon.discountValue.toStringAsFixed(0)}% OFF"
                                                 : "Rs ${coupon.discountValue.toStringAsFixed(0)} OFF",
 
-                                            style: const TextStyle(
+                                            style: AppTextStyles.small.copyWith(
                                               color: AppColors.primary,
-                                              fontSize: 7,
                                               fontWeight: FontWeight.w700,
                                             ),
                                           ),
@@ -1189,11 +1328,9 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                           crossAxisAlignment: CrossAxisAlignment.start,
 
                           children: [
-                            const Text(
+                            Text(
                               "Use Wallet Balance",
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 12,
+                              style: AppTextStyles.body.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -1204,10 +1341,7 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                               "Available: Rs. "
                               "${walletBalance.toStringAsFixed(2)}",
 
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 9,
-                              ),
+                              style: AppTextStyles.small,
                             ),
                           ],
                         ),
@@ -1233,14 +1367,7 @@ class _CheckoutContentState extends State<_CheckoutContent> {
 
               const SizedBox(height: 28),
 
-              const Text(
-                "Order Summary",
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text("Order Summary", style: AppTextStyles.title),
 
               const SizedBox(height: 8),
 
@@ -1256,91 +1383,9 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                 child: Column(
                   children: [
                     ...cartProvider.cartItems.map((item) {
-                      final price = item.selectedPrice;
-
-                      final quantity = item.quantity;
-
-                      final itemTotal = price * quantity;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 9),
-
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-
-                              child: SizedBox(
-                                width: 42,
-                                height: 42,
-
-                                child: Image.network(
-                                  item.imageUrl,
-                                  fit: BoxFit.cover,
-
-                                  errorBuilder: (_, _, _) {
-                                    return Container(
-                                      color: AppColors.iconSecondary,
-
-                                      child: const Icon(
-                                        Icons.fastfood,
-                                        size: 22,
-                                        color: AppColors.textTertiary,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 9),
-
-                            Expanded(
-                              child: Text(
-                                item.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 8),
-
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-
-                              children: [
-                                Text(
-                                  "Rs "
-                                  "${itemTotal.toStringAsFixed(2)}",
-
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 2),
-
-                                Text(
-                                  "Quantity: "
-                                  "$quantity",
-
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                      return _CheckoutCartItem(
+                        item: item,
+                        total: cartProvider.itemTotal(item),
                       );
                     }),
 
@@ -1373,7 +1418,9 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                     ],
 
                     _SummaryRow(
-                      title: "Taxes",
+                      title: isTaxIncluded
+                          ? "Tax (${taxPercent.toStringAsFixed(0)}% incl.)"
+                          : "Tax (${taxPercent.toStringAsFixed(0)}%)",
                       value: "Rs ${tax.toStringAsFixed(2)}",
                     ),
 
@@ -1393,11 +1440,9 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                       children: [
-                        const Text(
+                        Text(
                           "Grand Total",
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 14,
+                          style: AppTextStyles.price.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -1405,9 +1450,8 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                         Text(
                           "Rs ${grandTotal.toStringAsFixed(2)}",
 
-                          style: const TextStyle(
+                          style: AppTextStyles.price.copyWith(
                             color: AppColors.primary,
-                            fontSize: 15,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -1425,11 +1469,9 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                         children: [
-                          const Text(
+                          Text(
                             "Amount to Pay",
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 13,
+                            style: AppTextStyles.body.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -1437,9 +1479,8 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                           Text(
                             "Rs ${amountToPay.toStringAsFixed(2)}",
 
-                            style: const TextStyle(
+                            style: AppTextStyles.price.copyWith(
                               color: AppColors.primary,
-                              fontSize: 15,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -1483,9 +1524,11 @@ class _CheckoutContentState extends State<_CheckoutContent> {
                       color: AppColors.textOnPrimary,
                     ),
                   )
-                : const Text(
+                : Text(
                     "Place Order",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                    style: AppTextStyles.button.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
           ),
         ),
@@ -1518,12 +1561,237 @@ class _SummaryRow extends StatelessWidget {
 
         Text(
           value,
-          style: TextStyle(
+          style: AppTextStyles.small.copyWith(
             color: valueColor ?? AppColors.textSecondary,
-            fontSize: 8,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CheckoutCartItem extends StatefulWidget {
+  final CartItem item;
+  final double total;
+
+  const _CheckoutCartItem({required this.item, required this.total});
+
+  @override
+  State<_CheckoutCartItem> createState() => _CheckoutCartItemState();
+}
+
+class _CheckoutCartItemState extends State<_CheckoutCartItem> {
+  bool _showDetails = false;
+
+  bool get _hasDetails {
+    if (widget.item.isDeal) {
+      return widget.item.dealItems.isNotEmpty;
+    }
+
+    return (widget.item.menuVariationName != null &&
+            widget.item.menuVariationName!.trim().isNotEmpty) ||
+        widget.item.selectedChoices.isNotEmpty;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Column(
+          children: [
+            // ================= MAIN ITEM =================
+            SizedBox(
+              height: 58,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: SizedBox(
+                        width: 42,
+                        height: 42,
+                        child: Image.network(
+                          widget.item.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) {
+                            return Container(
+                              color: AppColors.iconSecondary,
+                              child: const Icon(
+                                Icons.fastfood,
+                                size: 22,
+                                color: AppColors.textTertiary,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 9),
+
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.item.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.price.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+
+                          const SizedBox(height: 2),
+
+                          if (_hasDetails)
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                setState(() {
+                                  _showDetails = !_showDetails;
+                                });
+                              },
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _showDetails ? "Show Less" : "Show More",
+                                    style: AppTextStyles.small.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 9,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 1),
+                                  Icon(
+                                    _showDetails
+                                        ? Icons.keyboard_arrow_up
+                                        : Icons.keyboard_arrow_down,
+                                    size: 13,
+                                    color: AppColors.primary,
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          "Rs ${widget.total.toStringAsFixed(2)}",
+                          style: AppTextStyles.price.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+
+                        const SizedBox(height: 2),
+
+                        Text(
+                          "Quantity: ${widget.item.quantity}",
+                          style: AppTextStyles.small,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ================= DETAILS =================
+            if (_showDetails && _hasDetails)
+              Container(
+                height: 68,
+                width: double.infinity,
+                margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: _buildDetails(),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetails() {
+    final List<Widget> details = [];
+
+    if (widget.item.isDeal) {
+      for (final dealItem in widget.item.dealItems) {
+        details.add(_detailRow(Icons.restaurant_menu, dealItem.name));
+
+        if (dealItem.variationName != null &&
+            dealItem.variationName!.trim().isNotEmpty) {
+          details.add(
+            _detailRow(Icons.tune, dealItem.variationName!, subItem: true),
+          );
+        }
+
+        for (final choice in dealItem.selectedChoices) {
+          details.add(
+            _detailRow(Icons.check_circle_outline, choice.name, subItem: true),
+          );
+        }
+      }
+    } else {
+      if (widget.item.menuVariationName != null &&
+          widget.item.menuVariationName!.trim().isNotEmpty) {
+        details.add(_detailRow(Icons.tune, widget.item.menuVariationName!));
+      }
+
+      for (final choice in widget.item.selectedChoices) {
+        details.add(
+          _detailRow(Icons.check_circle_outline, choice.name, subItem: true),
+        );
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: details,
+    );
+  }
+
+  Widget _detailRow(IconData icon, String text, {bool subItem = false}) {
+    return Padding(
+      padding: EdgeInsets.only(left: subItem ? 8 : 0, bottom: 3),
+      child: Row(
+        children: [
+          Icon(icon, size: 12, color: AppColors.primary),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.small.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 9,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

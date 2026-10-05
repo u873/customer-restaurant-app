@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/services/google_auth_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../controller/auth_controller.dart';
 import 'signup_screen.dart';
 
@@ -157,81 +158,23 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 9),
-      prefixIcon: Icon(icon, color: AppColors.iconSecondary, size: 13),
+      hintStyle: AppTextStyles.small.copyWith(color: AppColors.textTertiary),
+      prefixIcon: Icon(icon, color: AppColors.iconSecondary, size: 16),
       filled: true,
       fillColor: AppColors.foodCardBackground,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(9),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(9),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(9),
         borderSide: const BorderSide(color: AppColors.primary, width: 1),
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        const Expanded(
-          child: Row(
-            children: [
-              Text(
-                "Zest & Sizzle",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              SizedBox(width: 3),
-              Text("🔥", style: TextStyle(fontSize: 11)),
-            ],
-          ),
-        ),
-        Row(
-          children: [
-            const Icon(
-              Icons.location_on_outlined,
-              color: AppColors.textSecondary,
-              size: 15,
-            ),
-            const SizedBox(width: 3),
-            const Text(
-              "VALLEY",
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 9),
-            Container(width: 1, height: 18, color: AppColors.border),
-            const SizedBox(width: 9),
-            const Icon(
-              Icons.shopping_cart_outlined,
-              color: AppColors.textSecondary,
-              size: 15,
-            ),
-            const SizedBox(width: 3),
-            const Text(
-              "100",
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 
@@ -242,32 +185,30 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 34,
+      height: 38,
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           backgroundColor: AppColors.foodCardBackground,
           side: BorderSide.none,
           padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               icon,
-              style: const TextStyle(
+              style: AppTextStyles.body.copyWith(
                 color: AppColors.textPrimary,
-                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(width: 7),
             Text(
               text,
-              style: const TextStyle(
+              style: AppTextStyles.small.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 9,
               ),
             ),
           ],
@@ -285,64 +226,58 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Column(
               children: [
-                _buildHeader(),
-
-                const SizedBox(height: 25),
-
-                const Text(
-                  "Zest & Sizzle 🔥",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-
-                const SizedBox(height: 3),
-
-                const Text(
-                  "Welcome back. Ready to indulge?",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 9),
-                ),
-
-                const SizedBox(height: 17),
+                const SizedBox(height: 55),
 
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 13),
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
                   decoration: BoxDecoration(
                     color: AppColors.cardBackgroundLight,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Center(
+                          child: Text(
+                            "Login",
+                            style: AppTextStyles.title.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        Center(
+                          child: Text(
+                            "Welcome back. Ready to indulge?",
+                            style: AppTextStyles.bodySecondary,
+                          ),
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        Text(
                           "EMAIL ADDRESS",
-                          style: TextStyle(
+                          style: AppTextStyles.small.copyWith(
                             color: AppColors.textSecondary,
-                            fontSize: 7,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
 
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
 
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 9,
-                          ),
+                          style: AppTextStyles.body,
                           decoration: _inputDecoration(
                             hintText: "name@example.com",
                             icon: Icons.email_outlined,
@@ -360,26 +295,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 9),
+                        const SizedBox(height: 11),
 
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               "PASSWORD",
-                              style: TextStyle(
+                              style: AppTextStyles.small.copyWith(
                                 color: AppColors.textSecondary,
-                                fontSize: 7,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             GestureDetector(
                               onTap: () {},
-                              child: const Text(
+                              child: Text(
                                 "Forgot?",
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontSize: 7,
+                                style: AppTextStyles.action.copyWith(
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -387,26 +319,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
 
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
 
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
                           textInputAction: TextInputAction.done,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 9,
-                          ),
+                          style: AppTextStyles.body,
                           decoration: InputDecoration(
                             hintText: "••••••••",
-                            hintStyle: const TextStyle(
+                            hintStyle: AppTextStyles.small.copyWith(
                               color: AppColors.textTertiary,
-                              fontSize: 9,
                             ),
                             prefixIcon: const Icon(
                               Icons.lock_outline,
                               color: AppColors.iconSecondary,
-                              size: 13,
+                              size: 16,
                             ),
                             suffixIcon: IconButton(
                               onPressed: () {
@@ -416,34 +344,36 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(
-                                minWidth: 30,
-                                minHeight: 30,
+                                minWidth: 34,
+                                minHeight: 34,
                               ),
                               icon: Icon(
                                 _obscurePassword
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
                                 color: AppColors.iconSecondary,
-                                size: 12,
+                                size: 15,
                               ),
                             ),
                             filled: true,
                             fillColor: AppColors.foodCardBackground,
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 9,
-                              vertical: 9,
+                              horizontal: 12,
+                              vertical: 11,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(7),
+                              borderRadius: BorderRadius.circular(9),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(7),
+                              borderRadius: BorderRadius.circular(9),
                               borderSide: BorderSide.none,
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(7),
-                              borderSide: const BorderSide(
+                            focusedBorder: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(9),
+                              ),
+                              borderSide: BorderSide(
                                 color: AppColors.primary,
                                 width: 1,
                               ),
@@ -463,11 +393,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 15),
 
                         SizedBox(
                           width: double.infinity,
-                          height: 34,
+                          height: 38,
                           child: ElevatedButton(
                             onPressed: auth.isLoading ? null : _login,
                             style: ElevatedButton.styleFrom(
@@ -476,29 +406,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               elevation: 0,
                               padding: EdgeInsets.zero,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(22),
                               ),
                             ),
                             child: auth.isLoading
                                 ? const SizedBox(
-                                    width: 15,
-                                    height: 15,
+                                    width: 16,
+                                    height: 16,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       color: AppColors.textOnPrimary,
                                     ),
                                   )
-                                : const Text(
-                                    "Login",
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                                : Text("Login", style: AppTextStyles.button),
                           ),
                         ),
 
-                        const SizedBox(height: 11),
+                        const SizedBox(height: 13),
 
                         Row(
                           children: [
@@ -510,13 +434,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
+                                horizontal: 8,
                               ),
                               child: Text(
                                 "OR CONTINUE WITH",
-                                style: TextStyle(
+                                style: AppTextStyles.small.copyWith(
                                   color: AppColors.textTertiary,
-                                  fontSize: 6,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -530,7 +453,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
 
-                        const SizedBox(height: 9),
+                        const SizedBox(height: 15),
 
                         _buildSocialButton(
                           icon: "G",
@@ -538,27 +461,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           onTap: auth.isLoading ? () {} : _googleLogin,
                         ),
 
-                        const SizedBox(height: 6),
-
-                        _buildSocialButton(
-                          icon: "",
-                          text: "Apple",
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "Apple login is not available yet.",
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 15),
 
                         SizedBox(
                           width: double.infinity,
-                          height: 34,
+                          height: 38,
                           child: OutlinedButton(
                             onPressed: auth.isLoading ? null : _continueAsGuest,
                             style: OutlinedButton.styleFrom(
@@ -569,15 +476,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               padding: EdgeInsets.zero,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(7),
+                                borderRadius: BorderRadius.circular(9),
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               "Continue as Guest",
-                              style: TextStyle(
+                              style: AppTextStyles.button.copyWith(
                                 color: AppColors.primary,
-                                fontSize: 8,
-                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -587,25 +492,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 18),
 
                 GestureDetector(
                   onTap: _goToSignup,
                   child: RichText(
-                    text: const TextSpan(
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 8,
-                      ),
+                    text: TextSpan(
+                      style: AppTextStyles.bodySecondary,
                       children: [
-                        TextSpan(text: "Don't have an account? "),
-                        TextSpan(
-                          text: "Sign Up",
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        const TextSpan(text: "Don't have an account? "),
+                        TextSpan(text: "Sign Up", style: AppTextStyles.action),
                       ],
                     ),
                   ),

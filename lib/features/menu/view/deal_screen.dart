@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../cart/controller/cart_controller.dart';
 import '../../cart/model/cart_item.dart';
 import '../controller/menu_controller.dart';
@@ -19,18 +20,41 @@ class DealScreen extends StatefulWidget {
 
 class _DealScreenState extends State<DealScreen> {
   int quantity = 1;
+
   Menu get item => widget.item;
+
   final Map<String, List<MenuVariation>> selectedChoicesByGroup = {};
+
   String _choiceKey(int menuId, int groupId) {
     return '${menuId}_$groupId';
   }
 
   List<ChoiceGroup> _getChoiceGroups(Menu detail) {
-    final variationGroups = detail.menuVariation?.choiceGroups ?? [];
+    final groups = <ChoiceGroup>[];
 
-    final directGroups = detail.choiceGroup;
+    // Direct choice groups
+    groups.addAll(detail.choiceGroup);
 
-    return [...variationGroups, ...directGroups];
+    // Selected variation ke choice groups
+    if (detail.menuVariation?.choiceGroups != null) {
+      groups.addAll(detail.menuVariation!.choiceGroups!);
+    }
+
+    // Menu variations ke choice groups
+    for (final variation in detail.menuVariations ?? []) {
+      if (variation.choiceGroups != null) {
+        groups.addAll(variation.choiceGroups!);
+      }
+    }
+
+    // Duplicate groups remove karo
+    final uniqueGroups = <int, ChoiceGroup>{};
+
+    for (final group in groups) {
+      uniqueGroups[group.id] = group;
+    }
+
+    return uniqueGroups.values.toList();
   }
 
   CartChoice _createCartChoice(MenuVariation choice, {int? groupId}) {
@@ -106,13 +130,19 @@ class _DealScreenState extends State<DealScreen> {
                 "You can select maximum "
                 "${group.maxChoices} option(s) "
                 "from ${group.name}",
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.textOnPrimary,
+                ),
               ),
             ),
           );
+
           return;
         }
+
         selectedList.add(choice);
       }
+
       selectedChoicesByGroup[key] = selectedList;
     });
   }
@@ -133,6 +163,9 @@ class _DealScreenState extends State<DealScreen> {
                 "${detail.name}: Please select "
                 "at least ${group.minChoices} "
                 "option(s) from ${group.name}",
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.textOnPrimary,
+                ),
               ),
             ),
           );
@@ -148,16 +181,27 @@ class _DealScreenState extends State<DealScreen> {
   @override
   Widget build(BuildContext context) {
     final details = item.dealMenuDetails ?? [];
-    final menuProvider = context.watch<MenuProvider>();
-    final orderType = menuProvider.selectedOrderType;
-    final deliveryPrice = double.tryParse(item.deliveryPrice ?? "0") ?? 0;
-    final takeAwayPrice = double.tryParse(item.takeAwayPrice ?? "0") ?? 0;
-    final selectedPrice = orderType == OrderType.delivery
-        ? deliveryPrice
-        : takeAwayPrice;
 
+    final menuProvider = context.watch<MenuProvider>();
+
+    final orderType = menuProvider.selectedOrderType;
+
+    // Main deal price
+    final basePrice = double.tryParse(item.price ?? "0") ?? 0;
+
+    final deliveryPrice = double.tryParse(item.deliveryPrice ?? "0") ?? 0;
+
+    final takeAwayPrice = double.tryParse(item.takeAwayPrice ?? "0") ?? 0;
+
+    final selectedPrice = orderType == OrderType.delivery
+        ? (deliveryPrice > 0 ? deliveryPrice : basePrice)
+        : (takeAwayPrice > 0 ? takeAwayPrice : basePrice);
+
+    // Add selected choices after main deal price.
     final choicesTotal = _selectedChoicesTotal(orderType);
+
     final totalPrice = (selectedPrice + choicesTotal) * quantity;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -172,31 +216,24 @@ class _DealScreenState extends State<DealScreen> {
             size: 18,
           ),
         ),
-
         title: Text(
           item.name,
-
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
+          style: AppTextStyles.title.copyWith(
             color: Colors.white,
-            fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
         ),
       ),
-
       body: Column(
         children: [
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
                   Center(
                     child: ClipOval(
@@ -206,11 +243,9 @@ class _DealScreenState extends State<DealScreen> {
                         child: Image.network(
                           item.imageUrl ?? '',
                           fit: BoxFit.cover,
-
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               color: AppColors.cardBackground,
-
                               child: const Icon(
                                 Icons.fastfood,
                                 color: Colors.white54,
@@ -224,12 +259,12 @@ class _DealScreenState extends State<DealScreen> {
                   ),
 
                   const SizedBox(height: 20),
+
                   Text(
                     item.name,
-                    style: const TextStyle(
+                    style: AppTextStyles.heading.copyWith(
                       color: Colors.white,
                       fontSize: 20,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
 
@@ -237,7 +272,7 @@ class _DealScreenState extends State<DealScreen> {
 
                   Text(
                     "Rs ${selectedPrice.toStringAsFixed(2)}",
-                    style: const TextStyle(
+                    style: AppTextStyles.price.copyWith(
                       color: AppColors.primary,
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
@@ -246,54 +281,52 @@ class _DealScreenState extends State<DealScreen> {
 
                   const SizedBox(height: 20),
 
-                  const Text(
+                  Text(
                     "Deal Includes",
-                    style: TextStyle(
+                    style: AppTextStyles.title.copyWith(
                       color: Colors.white,
-                      fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
 
                   const SizedBox(height: 10),
+
                   if (details.isEmpty)
-                    const Text(
+                    Text(
                       "No items available in this deal.",
-                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                      style: AppTextStyles.bodySecondary.copyWith(
+                        color: Colors.white54,
+                      ),
                     )
                   else
                     ...details.map((detail) {
                       return _buildDealItem(detail, orderType);
                     }),
+
                   if (choicesTotal > 0) ...[
                     const SizedBox(height: 10),
 
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
-
                       decoration: BoxDecoration(
                         color: AppColors.cardBackground,
                         borderRadius: BorderRadius.circular(10),
                       ),
-
                       child: Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               "Selected Extras",
-                              style: TextStyle(
+                              style: AppTextStyles.bodySecondary.copyWith(
                                 color: Colors.white70,
-                                fontSize: 12,
                               ),
                             ),
                           ),
-
                           Text(
                             "+ Rs ${choicesTotal.toStringAsFixed(2)}",
-                            style: const TextStyle(
+                            style: AppTextStyles.bodySecondary.copyWith(
                               color: AppColors.primary,
-                              fontSize: 12,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -305,40 +338,34 @@ class _DealScreenState extends State<DealScreen> {
               ),
             ),
           ),
+
           SafeArea(
             minimum: const EdgeInsets.fromLTRB(16, 6, 16, 16),
-
             child: Container(
               height: 52,
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(28),
               ),
-
               child: Row(
                 children: [
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(left: 18),
-
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
-
                         children: [
-                          const Text(
+                          Text(
                             "Total",
-                            style: TextStyle(
+                            style: AppTextStyles.small.copyWith(
                               color: Colors.white70,
-                              fontSize: 9,
                             ),
                           ),
-
                           Text(
                             "Rs ${totalPrice.toStringAsFixed(2)}",
-                            style: const TextStyle(
+                            style: AppTextStyles.price.copyWith(
                               color: Colors.white,
-                              fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -355,7 +382,6 @@ class _DealScreenState extends State<DealScreen> {
                         });
                       }
                     },
-
                     icon: const Icon(
                       Icons.remove,
                       color: Colors.white,
@@ -365,9 +391,8 @@ class _DealScreenState extends State<DealScreen> {
 
                   Text(
                     "$quantity",
-                    style: const TextStyle(
+                    style: AppTextStyles.body.copyWith(
                       color: Colors.white,
-                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -378,7 +403,6 @@ class _DealScreenState extends State<DealScreen> {
                         quantity++;
                       });
                     },
-
                     icon: const Icon(Icons.add, color: Colors.white, size: 17),
                   ),
 
@@ -391,27 +415,20 @@ class _DealScreenState extends State<DealScreen> {
                         takeAwayPrice,
                       );
                     },
-
                     child: Container(
                       height: 44,
-
                       margin: const EdgeInsets.only(right: 4),
-
                       padding: const EdgeInsets.symmetric(horizontal: 18),
-
                       decoration: BoxDecoration(
                         color: AppColors.background,
                         borderRadius: BorderRadius.circular(24),
                       ),
-
                       alignment: Alignment.center,
-
-                      child: const Text(
+                      child: Text(
                         "Add To Cart",
-                        style: TextStyle(
+                        style: AppTextStyles.button.copyWith(
                           color: Colors.white,
                           fontSize: 11,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -430,17 +447,13 @@ class _DealScreenState extends State<DealScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-
         borderRadius: BorderRadius.circular(10),
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
           Row(
             children: [
@@ -448,7 +461,6 @@ class _DealScreenState extends State<DealScreen> {
                 child: SizedBox(
                   width: 48,
                   height: 48,
-
                   child: Image.network(
                     detail.imageUrl ?? '',
                     fit: BoxFit.cover,
@@ -476,10 +488,8 @@ class _DealScreenState extends State<DealScreen> {
                       detail.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-
-                      style: const TextStyle(
+                      style: AppTextStyles.body.copyWith(
                         color: Colors.white,
-                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -488,10 +498,8 @@ class _DealScreenState extends State<DealScreen> {
 
                     Text(
                       "Quantity: ${detail.quantity ?? 1}",
-
-                      style: const TextStyle(
+                      style: AppTextStyles.small.copyWith(
                         color: Colors.white54,
-                        fontSize: 10,
                       ),
                     ),
 
@@ -499,10 +507,10 @@ class _DealScreenState extends State<DealScreen> {
                       const SizedBox(height: 3),
 
                       Text(
-                        "Variation: ${detail.menuVariation!.name}",
-                        style: const TextStyle(
+                        "Variation: "
+                        "${detail.menuVariation!.name}",
+                        style: AppTextStyles.small.copyWith(
                           color: AppColors.primary,
-                          fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -512,6 +520,7 @@ class _DealScreenState extends State<DealScreen> {
               ),
             ],
           ),
+
           if (groups.isNotEmpty) ...[
             const SizedBox(height: 12),
 
@@ -535,26 +544,21 @@ class _DealScreenState extends State<DealScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-
       padding: const EdgeInsets.all(10),
-
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(10),
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
           Row(
             children: [
               Expanded(
                 child: Text(
                   group.name,
-                  style: const TextStyle(
+                  style: AppTextStyles.body.copyWith(
                     color: AppColors.textPrimary,
-                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -562,15 +566,15 @@ class _DealScreenState extends State<DealScreen> {
 
               Text(
                 "${group.minChoices}-${group.maxChoices}",
-                style: const TextStyle(
+                style: AppTextStyles.small.copyWith(
                   color: AppColors.textSecondary,
-                  fontSize: 9,
                 ),
               ),
             ],
           ),
 
           const SizedBox(height: 8),
+
           ...group.choices.map((choice) {
             final selected = selectedChoices.any(
               (selectedChoice) => selectedChoice.id == choice.id,
@@ -582,17 +586,14 @@ class _DealScreenState extends State<DealScreen> {
               onTap: () {
                 _toggleChoice(detail, group, choice);
               },
-
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 7),
-
                 child: Row(
                   children: [
                     Icon(
                       selected
                           ? Icons.check_circle
                           : Icons.radio_button_unchecked,
-
                       color: selected
                           ? AppColors.primary
                           : AppColors.textSecondary,
@@ -604,20 +605,19 @@ class _DealScreenState extends State<DealScreen> {
                     Expanded(
                       child: Text(
                         choice.name,
-                        style: const TextStyle(
+                        style: AppTextStyles.small.copyWith(
                           color: AppColors.textPrimary,
-                          fontSize: 10,
                         ),
                       ),
                     ),
 
                     Text(
                       choicePrice > 0
-                          ? "+ Rs ${choicePrice.toStringAsFixed(2)}"
+                          ? "+ Rs "
+                                "${choicePrice.toStringAsFixed(2)}"
                           : "Free",
-                      style: const TextStyle(
+                      style: AppTextStyles.small.copyWith(
                         color: AppColors.textSecondary,
-                        fontSize: 10,
                       ),
                     ),
                   ],
@@ -644,17 +644,36 @@ class _DealScreenState extends State<DealScreen> {
 
     final orderType = menuProvider.selectedOrderType;
 
+    final basePrice = double.tryParse(item.price ?? "0") ?? 0;
+
+    final effectiveDeliveryPrice = deliveryPrice > 0
+        ? deliveryPrice
+        : basePrice;
+
+    final effectiveTakeAwayPrice = takeAwayPrice > 0
+        ? takeAwayPrice
+        : basePrice;
+
+    final effectiveSelectedPrice = orderType == OrderType.delivery
+        ? effectiveDeliveryPrice
+        : effectiveTakeAwayPrice;
+
     final List<CartDealItem> cartDealItems = [];
+
     for (final detail in item.dealMenuDetails ?? []) {
       final detailChoices = <CartChoice>[];
+
       final groups = _getChoiceGroups(detail);
 
       for (final group in groups) {
         final key = _choiceKey(detail.id, group.id);
 
         final choices = selectedChoicesByGroup[key] ?? [];
+
         detailChoices.addAll(
-          choices.map((choice) => _createCartChoice(choice, groupId: group.id)),
+          choices.map((choice) {
+            return _createCartChoice(choice, groupId: group.id);
+          }),
         );
       }
 
@@ -672,26 +691,35 @@ class _DealScreenState extends State<DealScreen> {
         ),
       );
     }
-  //  final choicesTotal = _selectedChoicesTotal(orderType);
+
     final cartItem = CartItem(
       menuId: item.id,
       name: item.name,
       quantity: quantity,
-      selectedPrice: selectedPrice,
-      deliveryPrice: deliveryPrice,
-      takeAwayPrice: takeAwayPrice,
+
+      selectedPrice: effectiveSelectedPrice,
+
+      deliveryPrice: effectiveDeliveryPrice,
+
+      takeAwayPrice: effectiveTakeAwayPrice,
+
       orderType: orderType == OrderType.delivery ? "delivery" : "takeaway",
 
       imageUrl: item.imageUrl ?? '',
+
       isDeal: true,
+
       selectedChoices: const [],
+
       dealItems: cartDealItems,
     );
 
     await context.read<CartProvider>().addToCart(cartItem);
+
     if (!context.mounted) {
       return;
     }
+
     widget.onClose();
   }
 }

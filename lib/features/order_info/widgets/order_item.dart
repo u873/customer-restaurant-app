@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_text_styles.dart';
+
 class OrderItem extends StatelessWidget {
   final String name;
   final String imageUrl;
@@ -18,12 +20,8 @@ class OrderItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 58,
-      margin: const EdgeInsets.only(
-        bottom: 7,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-      ),
+      margin: const EdgeInsets.only(bottom: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: const Color(0xff292A2E),
         borderRadius: BorderRadius.circular(18),
@@ -57,19 +55,15 @@ class OrderItem extends StatelessWidget {
           // NAME + QUANTITY
           Expanded(
             child: Column(
-              mainAxisAlignment:
-              MainAxisAlignment.center,
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
                   maxLines: 1,
-                  overflow:
-                  TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body.copyWith(
                     color: Colors.white,
-                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -78,10 +72,7 @@ class OrderItem extends StatelessWidget {
 
                 Text(
                   "Quantity: $quantity",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                  ),
+                  style: AppTextStyles.small.copyWith(color: Colors.white),
                 ),
               ],
             ),
@@ -89,9 +80,8 @@ class OrderItem extends StatelessWidget {
 
           Text(
             "Rs ${total.toStringAsFixed(2)}",
-            style: const TextStyle(
+            style: AppTextStyles.price.copyWith(
               color: Colors.white,
-              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),

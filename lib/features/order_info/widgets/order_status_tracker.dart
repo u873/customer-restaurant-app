@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 
 class OrderStatus extends StatelessWidget {
   const OrderStatus({super.key});
@@ -11,23 +12,23 @@ class OrderStatus extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
-          children: [const StatusDot(active: true,),
+          children: [
+            const StatusDot(active: true),
             const StatusLine(),
-            const StatusDot(active: true,),
+            const StatusDot(active: true),
             const StatusLine(),
-            const StatusDot(active: false,),
+            const StatusDot(active: false),
             const StatusLine(),
-            const StatusDot(active: false,),
+            const StatusDot(active: false),
           ],
         ),
 
         const SizedBox(height: 8),
 
-        const Text(
+        Text(
           "Preparing",
-          style: TextStyle(
+          style: AppTextStyles.body.copyWith(
             color: Colors.white,
-            fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -39,10 +40,7 @@ class OrderStatus extends StatelessWidget {
 class StatusDot extends StatelessWidget {
   final bool active;
 
-  const StatusDot({
-    super.key,
-    required this.active,
-  });
+  const StatusDot({super.key, required this.active});
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +49,7 @@ class StatusDot extends StatelessWidget {
       height: 12,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: active
-            ? AppColors.primary
-            : Colors.white54,
+        color: active ? AppColors.primary : Colors.white54,
       ),
     );
   }
@@ -65,11 +61,7 @@ class StatusLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Container(
-          width: 45,
-          height: 4,
-          color: Colors.white38,
-        ),
+      child: Container(width: 45, height: 4, color: Colors.white38),
     );
   }
 }

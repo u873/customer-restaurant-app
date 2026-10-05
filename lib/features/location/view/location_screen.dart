@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/storage/shared_pref_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../address/controller/address_controller.dart';
 import '../../address/model/customer_address.dart';
 import '../controller/location_controller.dart';
@@ -12,6 +14,7 @@ class LocationScreen extends StatefulWidget {
   final int addressTypeId;
   final CustomerAddress? existingAddress;
   final Future<void> Function()? onAddressSaved;
+  final bool localOnly;
 
   const LocationScreen({
     super.key,
@@ -19,6 +22,7 @@ class LocationScreen extends StatefulWidget {
     required this.addressTypeId,
     this.existingAddress,
     this.onAddressSaved,
+    this.localOnly = false,
   });
 
   @override
@@ -91,6 +95,7 @@ class _LocationScreenState extends State<LocationScreen> {
   Future<void> _saveAddress() async {
     final locationController = context.read<LocationController>();
     final addressController = context.read<AddressController>();
+
     final manualDetails = _addressDetailsController.text.trim();
     final mapAddress = locationController.address.trim();
 
@@ -127,6 +132,28 @@ class _LocationScreenState extends State<LocationScreen> {
       return;
     }
 
+    // FIRST LAUNCH:
+    // Save address only locally because user does not have
+    // login/guest customer identity yet.
+    if (widget.localOnly) {
+      await SharedPrefService.saveAddress(
+        addressId: "",
+        address1: finalAddress,
+        addressTypeId: widget.addressTypeId,
+        addressType: _getAddressTypeName(widget.addressTypeId),
+        townId: 11,
+        townBlockId: 104,
+        latitude: locationController.currentLatLng.latitude.toString(),
+        longitude: locationController.currentLatLng.longitude.toString(),
+        isDefault: 1,
+      );
+
+      await widget.onAddressSaved?.call();
+      return;
+    }
+
+    // EXISTING FLOW:
+    // Normal address add/edit API.
     final success = await addressController.addOrEditAddress(
       addressTypeId: widget.addressTypeId,
       existingAddress: widget.existingAddress,
@@ -145,6 +172,19 @@ class _LocationScreenState extends State<LocationScreen> {
     await widget.onAddressSaved?.call();
   }
 
+  String _getAddressTypeName(int addressTypeId) {
+    switch (addressTypeId) {
+      case 3:
+        return "Home";
+      case 4:
+        return "Flat";
+      case 5:
+        return "Office";
+      default:
+        return "Home";
+    }
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -158,7 +198,7 @@ class _LocationScreenState extends State<LocationScreen> {
           ),
           content: Text(
             message,
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
           ),
         ),
       );
@@ -241,15 +281,15 @@ class _LocationScreenState extends State<LocationScreen> {
                           height: 24,
                           color: AppColors.border,
                         ),
+
                         // Search input
                         Expanded(
                           child: TextField(
                             controller: _searchController,
                             focusNode: _searchFocusNode,
                             textInputAction: TextInputAction.search,
-                            style: const TextStyle(
+                            style: AppTextStyles.body.copyWith(
                               color: AppColors.textPrimary,
-                              fontSize: 15,
                             ),
                             onChanged: (value) {
                               locationController.searchPlaces(value);
@@ -257,15 +297,14 @@ class _LocationScreenState extends State<LocationScreen> {
                             onSubmitted: (_) {
                               _performSearch();
                             },
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               hintText: "Search your location",
-                              hintStyle: TextStyle(
+                              hintStyle: AppTextStyles.small.copyWith(
                                 color: AppColors.textSecondary,
-                                fontSize: 14.5,
                               ),
                               border: InputBorder.none,
                               isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
+                              contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 13,
                               ),
                             ),
@@ -368,10 +407,9 @@ class _LocationScreenState extends State<LocationScreen> {
                                         suggestion.description,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          height: 1.3,
+                                        style: AppTextStyles.body.copyWith(
                                           color: AppColors.textPrimary,
+                                          height: 1.3,
                                         ),
                                       ),
                                     ),
@@ -454,14 +492,10 @@ class _LocationScreenState extends State<LocationScreen> {
                             // Header
                             Row(
                               children: [
-                                const Expanded(
+                                Expanded(
                                   child: Text(
                                     "Confirm your location",
-                                    style: TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    style: AppTextStyles.heading,
                                   ),
                                 ),
 
@@ -511,9 +545,8 @@ class _LocationScreenState extends State<LocationScreen> {
                                           : locationController.address,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
+                                      style: AppTextStyles.small.copyWith(
                                         color: AppColors.textSecondary,
-                                        fontSize: 13,
                                         height: 1.35,
                                       ),
                                     ),
@@ -528,15 +561,13 @@ class _LocationScreenState extends State<LocationScreen> {
                             TextField(
                               controller: _addressDetailsController,
                               maxLines: 2,
-                              style: const TextStyle(
+                              style: AppTextStyles.body.copyWith(
                                 color: AppColors.textPrimary,
-                                fontSize: 13.5,
                               ),
                               decoration: InputDecoration(
                                 hintText: "House no, flat, street, building...",
-                                hintStyle: const TextStyle(
+                                hintStyle: AppTextStyles.small.copyWith(
                                   color: AppColors.textSecondary,
-                                  fontSize: 13,
                                 ),
                                 filled: true,
                                 fillColor: AppColors.cardBackground,
@@ -593,12 +624,9 @@ class _LocationScreenState extends State<LocationScreen> {
                                           color: AppColors.textOnPrimary,
                                         ),
                                       )
-                                    : const Text(
+                                    : Text(
                                         "Save Address",
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        style: AppTextStyles.button,
                                       ),
                               ),
                             ),

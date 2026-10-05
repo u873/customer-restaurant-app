@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:customer_estaurant_app/core/theme/app_colors.dart';
 import '../controller/content_controller.dart';
@@ -27,6 +30,34 @@ class _ContentScreenState extends State<ContentScreen> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> launchUrlForPhoneNumber(BuildContext context) async {
+    const phoneNumber = '03174588185';
+
+    if (phoneNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number is not available')),
+      );
+      return;
+    }
+
+    final telUrl = Uri(scheme: 'tel', path: phoneNumber);
+
+    await launchUrl(telUrl)
+        .then((value) {
+          if (!value) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Something went wrong')),
+            );
+          }
+        })
+        .onError((error, stackTrace) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Something went wrong')));
+          log('e:$error');
+        });
   }
 
   @override
@@ -73,7 +104,26 @@ class _ContentScreenState extends State<ContentScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 36, height: 36),
+                  if (isAbout)
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primary.withOpacity(0.15),
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: () => launchUrlForPhoneNumber(context),
+                        icon: const Icon(
+                          Icons.phone_outlined,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 36, height: 36),
                 ],
               ),
             ),
@@ -149,7 +199,6 @@ class _ContentScreenState extends State<ContentScreen> {
                           fontSize: 11,
                           height: 1.6,
                         ),
-
                         customStylesBuilder: (element) {
                           if (element.localName == 'h1' ||
                               element.localName == 'h2' ||

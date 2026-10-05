@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../controller/order_history_provider.dart';
 import '../model/order_history_model.dart';
 
@@ -63,16 +64,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       ),
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Center(
-                      child: Text(
-                        "Order History",
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: Text("Order History", style: AppTextStyles.title),
                     ),
                   ),
                   const SizedBox(width: 36, height: 36),
@@ -97,10 +91,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         child: Text(
                           provider.errorMessage!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
-                          ),
+                          style: AppTextStyles.bodySecondary,
                         ),
                       ),
                     );
@@ -112,21 +103,18 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       onRefresh: () =>
                           provider.refresh(restaurantId: restaurantId),
                       child: ListView(
-                        children: const [
-                          SizedBox(height: 180),
-                          Icon(
+                        children: [
+                          const SizedBox(height: 180),
+                          const Icon(
                             Icons.receipt_long_outlined,
                             color: AppColors.iconSecondary,
                             size: 55,
                           ),
-                          SizedBox(height: 14),
+                          const SizedBox(height: 14),
                           Center(
                             child: Text(
                               "No orders yet",
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 14,
-                              ),
+                              style: AppTextStyles.bodySecondary,
                             ),
                           ),
                         ],
@@ -219,24 +207,14 @@ class _OrderHistoryCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "Order",
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
-                        ),
-                      ),
+                      Text("Order", style: AppTextStyles.bodySecondary),
                       const SizedBox(height: 3),
                       Text(
-                        order.orderNo?.isNotEmpty == true
-                            ? order.orderNo!
-                            : order.orderId,
+                        order.dailyOrderId.toString(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: AppTextStyles.price.copyWith(
                           color: AppColors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -274,19 +252,12 @@ class _OrderHistoryCard extends StatelessWidget {
             const SizedBox(height: 14),
             Row(
               children: [
-                const Text(
-                  "Status",
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                  ),
-                ),
+                Text("Status", style: AppTextStyles.bodySecondary),
                 const Spacer(),
                 Text(
                   order.orderStatus.name,
-                  style: TextStyle(
+                  style: AppTextStyles.body.copyWith(
                     color: _statusColor(order.orderStatus.name),
-                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -327,18 +298,14 @@ class _InfoItem extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 10),
-        ),
+        Text(title, style: AppTextStyles.small),
         const SizedBox(height: 4),
         Text(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
+          style: AppTextStyles.bodySecondary.copyWith(
             color: AppColors.textPrimary,
-            fontSize: 11,
             fontWeight: FontWeight.w500,
           ),
         ),

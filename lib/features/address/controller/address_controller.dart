@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 import '../../../core/storage/shared_pref_service.dart';
@@ -55,7 +53,7 @@ class AddressController extends ChangeNotifier {
       } else {
         errorMessage = response.message;
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       errorMessage = "Failed to load addresses.";
     }
 
@@ -71,6 +69,103 @@ class AddressController extends ChangeNotifier {
   void clearSelectedAddress() {
     selectedAddress = null;
     notifyListeners();
+  }
+
+  Future<bool> syncLocalAddressToBackend() async {
+    try {
+      final addressSynced = await SharedPrefService.getAddressSynced();
+
+      // Already synced, nothing to do.
+      if (addressSynced) {
+        return true;
+      }
+
+      // Read locally saved address.
+      final address1 = await SharedPrefService.getAddress1();
+
+      if (address1 == null || address1.trim().isEmpty) {
+        return true;
+      }
+
+      final addressTypeId = await SharedPrefService.getAddressTypeId() ?? 3;
+
+      final townId = await SharedPrefService.getTownId() ?? 11;
+
+      final townBlockId = await SharedPrefService.getTownBlockId() ?? 104;
+
+      final latitudeString = await SharedPrefService.getLatitude();
+
+      final longitudeString = await SharedPrefService.getLongitude();
+
+      final isDefault = await SharedPrefService.getIsDefaultAddress() ?? 1;
+
+      final latitude = double.tryParse(latitudeString ?? '') ?? 0.0;
+
+      final longitude = double.tryParse(longitudeString ?? '') ?? 0.0;
+
+      // Backend API call.
+      final response = await _addressRepo.addEditCustomerAddress(
+        addressId: "",
+        addressTypeId: addressTypeId,
+        address: address1.trim(),
+        townId: townId,
+        townBlockId: townBlockId,
+        latitude: latitude,
+        longitude: longitude,
+        isDefault: isDefault,
+      );
+
+      if (!response.success || response.data == null) {
+        errorMessage = response.message.isNotEmpty
+            ? response.message
+            : "Failed to sync delivery address.";
+
+        return false;
+      }
+
+      final backendAddress = response.data!;
+
+      // Save backend address data locally.
+      await SharedPrefService.saveAddress(
+        addressId: backendAddress.addressId.isNotEmpty
+            ? backendAddress.addressId
+            : backendAddress.id.toString(),
+        address1: backendAddress.address1,
+        addressTypeId: backendAddress.addressTypeId,
+        addressType: backendAddress.addressType,
+        townId: backendAddress.townId,
+        townBlockId: backendAddress.townBlockId,
+        latitude: backendAddress.latitude.toString(),
+        longitude: backendAddress.longitude.toString(),
+        isDefault: backendAddress.isDefault,
+      );
+
+      // saveAddress() resets this to false,
+      // so explicitly mark it synced afterwards.
+      await SharedPrefService.saveAddressSynced(true);
+
+      // Use backend address as selected address.
+      selectedAddress = backendAddress;
+
+      // Add/update local controller list.
+      final existingIndex = addresses.indexWhere(
+        (item) => item.id == backendAddress.id,
+      );
+
+      if (existingIndex >= 0) {
+        addresses[existingIndex] = backendAddress;
+      } else {
+        addresses = [...addresses, backendAddress];
+      }
+
+      notifyListeners();
+
+      return true;
+    } catch (e) {
+      errorMessage = e.toString().replaceFirst("Exception: ", "");
+
+      return false;
+    }
   }
 
   Future<bool> addOrEditAddress({
@@ -97,10 +192,10 @@ class AddressController extends ChangeNotifier {
       );
 
       if (response.success) {
-        // Old locally saved address clear karo
+        // Old locally saved address clear karo.
         await SharedPrefService.clearAddress();
 
-        // Fresh addresses API se load karo
+        // Fresh addresses API se load karo.
         await getCustomerAddresses();
 
         return true;
@@ -109,8 +204,8 @@ class AddressController extends ChangeNotifier {
       errorMessage = response.message;
 
       return false;
-    } catch (_) {
-      errorMessage = e.toString();
+    } catch (e) {
+      errorMessage = e.toString().replaceFirst("Exception: ", "");
 
       return false;
     } finally {

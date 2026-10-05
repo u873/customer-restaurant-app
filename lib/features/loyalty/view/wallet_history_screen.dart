@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../loyalty/provider/loyalty_provider.dart';
 
 class WalletHistoryScreen extends StatefulWidget {
@@ -52,16 +53,9 @@ class _WalletHistoryScreenState extends State<WalletHistoryScreen> {
                       ),
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Center(
-                      child: Text(
-                        "Wallet",
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: Text("Wallet", style: AppTextStyles.title),
                     ),
                   ),
                   const SizedBox(width: 36, height: 36),
@@ -86,10 +80,7 @@ class _WalletHistoryScreenState extends State<WalletHistoryScreen> {
                         child: Text(
                           wallet.errorMessage!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
-                          ),
+                          style: AppTextStyles.bodySecondary,
                         ),
                       ),
                     );
@@ -104,14 +95,7 @@ class _WalletHistoryScreenState extends State<WalletHistoryScreen> {
                       children: [
                         _WalletBalanceCard(amount: wallet.walletAmount),
                         const SizedBox(height: 28),
-                        const Text(
-                          "Wallet History",
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        Text("Wallet History", style: AppTextStyles.title),
                         const SizedBox(height: 12),
                         if (wallet.walletTransactions.isEmpty)
                           const _EmptyWalletHistory()
@@ -167,18 +151,11 @@ class _WalletBalanceCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Available Balance",
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-              ),
+              Text("Available Balance", style: AppTextStyles.subtitle),
               const SizedBox(height: 5),
               Text(
                 "Rs. ${amount.toStringAsFixed(0)}",
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppTextStyles.largeValue,
               ),
             ],
           ),
@@ -200,18 +177,18 @@ class _EmptyWalletHistory extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(
+          const Icon(
             Icons.account_balance_wallet_outlined,
             color: AppColors.iconSecondary,
             size: 45,
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
             "No wallet transactions yet",
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            style: AppTextStyles.bodySecondary,
           ),
         ],
       ),

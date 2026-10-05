@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../view/cart_screen.dart';
 import '../controller/cart_controller.dart';
 
@@ -44,31 +45,28 @@ class CartBottomBar extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       '${cartProvider.totalItems}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xffF6C400),
+                      style: AppTextStyles.body.copyWith(
+                        color: const Color(0xffF6C400),
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
 
                   const SizedBox(width: 12),
 
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'View Cart',
-                      style: TextStyle(
+                      style: AppTextStyles.title.copyWith(
                         color: Colors.black,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
 
                   Text(
                     'Rs ${cartProvider.subtotal.toStringAsFixed(0)}',
-                    style: const TextStyle(
+                    style: AppTextStyles.price.copyWith(
                       color: Colors.black,
-                      fontSize: 15,
                       fontWeight: FontWeight.w400,
                     ),
                   ),

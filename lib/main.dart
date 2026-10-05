@@ -11,8 +11,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'core/storage/shared_pref_service.dart';
 import 'features/address/controller/address_controller.dart';
 import 'features/location/controller/location_controller.dart';
+import 'features/location/view/location_screen.dart';
 import 'features/loyalty/provider/loyalty_provider.dart';
 
 void main() async {
@@ -76,25 +78,56 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool _showSplash = true;
+  bool _showInitialAddress = false;
 
-  void _finishSplash() {
+  Future<void> _finishSplash() async {
+    final hasShownFirstAddress =
+    await SharedPrefService.getHasShownFirstAddress();
+
     if (!mounted) return;
 
     setState(() {
       _showSplash = false;
+      _showInitialAddress = !hasShownFirstAddress;
+    });
+  }
+
+  Future<void> _initialAddressSaved() async {
+    await SharedPrefService.saveHasShownFirstAddress(true);
+
+    if (!mounted) return;
+
+    setState(() {
+      _showInitialAddress = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget home;
+
+    if (_showSplash) {
+      home = SplashScreen(
+        onFinished: _finishSplash,
+      );
+    } else if (_showInitialAddress) {
+      home = LocationScreen(
+        addressTypeId: 3,
+        localOnly: true,
+        onAddressSaved: _initialAddressSaved,
+      );
+    } else {
+      home = const HomeScreen();
+    }
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-
-      home: _showSplash
-          ? SplashScreen(
-        onFinished: _finishSplash,
-      )
-          : const HomeScreen(),
+      builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
+        return MediaQuery(data: mediaQuery.copyWith(
+            textScaler: TextScaler.noScaling), child: child!);
+      },
+      home: home,
     );
   }
 }

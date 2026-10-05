@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../auth/controller/auth_controller.dart';
 
 class GuestSignupScreen extends StatefulWidget {
@@ -135,7 +136,9 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
   }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+      hintStyle: AppTextStyles.small.copyWith(
+        color: AppColors.textSecondary,
+      ),
       prefixIcon: Icon(icon, color: AppColors.iconSecondary, size: 18),
       filled: true,
       fillColor: AppColors.cardBackground,
@@ -182,13 +185,9 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
             size: 18,
           ),
         ),
-        title: const Text(
+        title: Text(
           "Continue as Guest",
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: AppTextStyles.title,
         ),
       ),
       body: SafeArea(
@@ -218,11 +217,7 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
                 const Center(
                   child: Text(
                     "Guest Checkout",
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppTextStyles.heading
                   ),
                 ),
                 const SizedBox(height: 7),
@@ -230,18 +225,14 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
                   child: Text(
                     "Enter your details to continue with your order.",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 10,
-                    ),
+                    style: AppTextStyles.bodySecondary,
                   ),
                 ),
                 const SizedBox(height: 28),
-                const Text(
+                Text(
                   "Name",
-                  style: TextStyle(
+                  style: AppTextStyles.small.copyWith(
                     color: AppColors.textPrimary,
-                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -250,10 +241,7 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
                   controller: _nameController,
                   textInputAction: TextInputAction.next,
                   textCapitalization: TextCapitalization.words,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 11,
-                  ),
+                  style: AppTextStyles.body,
                   decoration: _inputDecoration(
                     hintText: "Enter your name",
                     icon: Icons.person_outline_rounded,
@@ -261,11 +249,10 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
                   validator: _validateName,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   "Email",
-                  style: TextStyle(
+                  style: AppTextStyles.small.copyWith(
                     color: AppColors.textPrimary,
-                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -274,10 +261,7 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 11,
-                  ),
+                  style: AppTextStyles.body,
                   decoration: _inputDecoration(
                     hintText: "Enter your email",
                     icon: Icons.email_outlined,
@@ -285,11 +269,10 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
                   validator: _validateEmail,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   "Phone Number",
-                  style: TextStyle(
+                  style: AppTextStyles.small.copyWith(
                     color: AppColors.textPrimary,
-                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -298,10 +281,7 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.done,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 11,
-                  ),
+                  style: AppTextStyles.body,
                   decoration: _inputDecoration(
                     hintText: "03001234567",
                     icon: Icons.phone_outlined,
@@ -320,7 +300,7 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
                     borderRadius: BorderRadius.circular(11),
                     border: Border.all(color: AppColors.border),
                   ),
-                  child: const Row(
+                  child:  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(
@@ -332,9 +312,7 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
                       Expanded(
                         child: Text(
                           "You can place an order without creating a permanent account.",
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 9,
+                          style: AppTextStyles.small.copyWith(
                             height: 1.4,
                           ),
                         ),
@@ -367,13 +345,12 @@ class _GuestSignupScreenState extends State<GuestSignupScreen> {
                               color: AppColors.textOnPrimary,
                             ),
                           )
-                        : const Text(
-                            "Continue as Guest",
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                        : Text(
+                      "Continue as Guest",
+                      style: AppTextStyles.button.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ],

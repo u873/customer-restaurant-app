@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../controller/auth_controller.dart';
 import 'login_screen.dart';
 import 'otp_screen.dart';
@@ -91,7 +92,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 10),
+      hintStyle: AppTextStyles.small.copyWith(color: AppColors.textTertiary),
       prefixIcon: Icon(icon, color: AppColors.iconSecondary, size: 16),
       suffixIcon: suffixIcon,
       filled: true,
@@ -115,9 +116,8 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
+      style: AppTextStyles.small.copyWith(
         color: AppColors.textSecondary,
-        fontSize: 10,
         fontWeight: FontWeight.w600,
       ),
     );
@@ -132,72 +132,49 @@ class _SignupScreenState extends State<SignupScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Column(
               children: [
-                const Text(
-                  "Zest & Sizzle 🔥",
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  "Create your account and start ordering.",
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 35),
 
-                // FORM CARD
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
                   decoration: BoxDecoration(
                     color: AppColors.cardBackgroundLight,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Center(
+                        Center(
                           child: Text(
                             "Create Account",
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: AppTextStyles.heading,
                           ),
                         ),
+
                         const SizedBox(height: 3),
+
                         const Center(
                           child: Text(
                             "Join the most flavorful club in town.",
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 10,
-                            ),
+                            style: AppTextStyles.bodySecondary,
                           ),
                         ),
+
                         const SizedBox(height: 18),
 
-                        // NAME
                         _buildLabel("FULL NAME"),
+
                         const SizedBox(height: 6),
+
                         TextFormField(
                           controller: _nameController,
                           textInputAction: TextInputAction.next,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 11,
-                          ),
+                          style: AppTextStyles.body,
                           decoration: _inputDecoration(
                             hintText: "John Doe",
                             icon: Icons.person_outline,
@@ -206,23 +183,22 @@ class _SignupScreenState extends State<SignupScreen> {
                             if (value == null || value.trim().isEmpty) {
                               return "Please enter your name";
                             }
+
                             return null;
                           },
                         ),
 
                         const SizedBox(height: 11),
 
-                        // EMAIL
                         _buildLabel("EMAIL ADDRESS"),
+
                         const SizedBox(height: 6),
+
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 11,
-                          ),
+                          style: AppTextStyles.body,
                           decoration: _inputDecoration(
                             hintText: "name@example.com",
                             icon: Icons.email_outlined,
@@ -242,17 +218,15 @@ class _SignupScreenState extends State<SignupScreen> {
 
                         const SizedBox(height: 11),
 
-                        // PHONE
                         _buildLabel("PHONE NUMBER"),
+
                         const SizedBox(height: 6),
+
                         TextFormField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
                           textInputAction: TextInputAction.next,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 11,
-                          ),
+                          style: AppTextStyles.body,
                           decoration: _inputDecoration(
                             hintText: "0316-1234567",
                             icon: Icons.phone_outlined,
@@ -272,17 +246,15 @@ class _SignupScreenState extends State<SignupScreen> {
 
                         const SizedBox(height: 11),
 
-                        // PASSWORD
                         _buildLabel("PASSWORD"),
+
                         const SizedBox(height: 6),
+
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
                           textInputAction: TextInputAction.done,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 11,
-                          ),
+                          style: AppTextStyles.body,
                           decoration: _inputDecoration(
                             hintText: "••••••••",
                             icon: Icons.lock_outline,
@@ -293,6 +265,10 @@ class _SignupScreenState extends State<SignupScreen> {
                                 });
                               },
                               padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 34,
+                                minHeight: 34,
+                              ),
                               icon: Icon(
                                 _obscurePassword
                                     ? Icons.visibility_off_outlined
@@ -315,9 +291,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 11),
+                        const SizedBox(height: 12),
 
-                        // TERMS
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -338,13 +313,14 @@ class _SignupScreenState extends State<SignupScreen> {
                                 },
                               ),
                             ),
+
                             const SizedBox(width: 8),
-                            const Expanded(
+
+                            Expanded(
                               child: Text(
                                 "I agree to the Terms of Service and Privacy Policy.",
-                                style: TextStyle(
+                                style: AppTextStyles.small.copyWith(
                                   color: AppColors.textTertiary,
-                                  fontSize: 9,
                                   height: 1.2,
                                 ),
                               ),
@@ -354,10 +330,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
                         const SizedBox(height: 14),
 
-                        // CREATE ACCOUNT BUTTON
                         SizedBox(
                           width: double.infinity,
-                          height: 44,
+                          height: 40,
                           child: ElevatedButton(
                             onPressed: auth.isLoading ? null : _createAccount,
                             style: ElevatedButton.styleFrom(
@@ -365,25 +340,22 @@ class _SignupScreenState extends State<SignupScreen> {
                               foregroundColor: AppColors.textOnPrimary,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
+                                borderRadius: BorderRadius.circular(22),
                               ),
                             ),
                             child: auth.isLoading
                                 ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
+                                    width: 17,
+                                    height: 17,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       color: AppColors.textOnPrimary,
                                     ),
                                   )
-                                : const Text(
-                                    "Create Account",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                                :  Text(
+                            "Create Account",
+                            style: AppTextStyles.button,
+                          ),
                           ),
                         ),
                       ],
@@ -391,9 +363,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
-                // LOGIN
                 GestureDetector(
                   onTap: () {
                     Navigator.pushReplacement(
@@ -402,24 +373,20 @@ class _SignupScreenState extends State<SignupScreen> {
                     );
                   },
                   child: RichText(
-                    text: const TextSpan(
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                      ),
+                    text: TextSpan(
+                      style: AppTextStyles.bodySecondary,
                       children: [
                         TextSpan(text: "Already have an account? "),
                         TextSpan(
                           text: "Login",
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: AppTextStyles.action,
                         ),
                       ],
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 4),
               ],
             ),
           ),

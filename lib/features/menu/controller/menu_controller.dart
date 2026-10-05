@@ -142,9 +142,9 @@ class MenuProvider extends ChangeNotifier {
     if (type == OrderType.pickup) {
       deliveryCharge = 0.0;
 
-      await getMenu(branchId, 2);
+      await getMenu(branchId, 3);
     } else {
-      await getMenu(branchId, 1);
+      await getMenu(branchId, 3);
 
       if (selectedLat != null && selectedLng != null) {
         final cartProvider = context.read<CartProvider>();

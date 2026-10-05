@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../controller/auth_controller.dart';
 import 'login_screen.dart';
 
@@ -175,11 +176,7 @@ class _OtpScreenState extends State<OtpScreen> {
       ),
       child: Text(
         hasValue ? _otp[index] : "",
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        style: AppTextStyles.title.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -197,11 +194,7 @@ class _OtpScreenState extends State<OtpScreen> {
         alignment: Alignment.center,
         child: Text(
           value,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          style: AppTextStyles.price.copyWith(fontWeight: FontWeight.w500),
         ),
       ),
     );
@@ -310,14 +303,7 @@ class _OtpScreenState extends State<OtpScreen> {
               const SizedBox(height: 18),
 
               // TITLE
-              const Text(
-                "Verification Code",
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              Text("Verification Code", style: AppTextStyles.heading),
 
               const SizedBox(height: 5),
 
@@ -326,11 +312,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 "Enter the 4-digit code sent to your phone\n"
                 "${_maskedPhone()}",
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 8,
-                  height: 1.5,
-                ),
+                style: AppTextStyles.small.copyWith(height: 1.5),
               ),
 
               const SizedBox(height: 18),
@@ -361,10 +343,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
                 child: RichText(
                   text: TextSpan(
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 10,
-                    ),
+                    style: AppTextStyles.small,
 
                     children: [
                       const TextSpan(text: "Didn't receive code? "),
@@ -374,11 +353,10 @@ class _OtpScreenState extends State<OtpScreen> {
                             ? "Resend"
                             : "Resend ($minutes:$seconds)",
 
-                        style: TextStyle(
+                        style: AppTextStyles.small.copyWith(
                           color: _secondsRemaining == 0
                               ? AppColors.primary
                               : AppColors.textTertiary,
-
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -411,13 +389,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
 
                     children: [
-                      Text(
-                        "Verify",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      Text("Verify", style: AppTextStyles.button),
 
                       SizedBox(width: 5),
 
@@ -435,11 +407,9 @@ class _OtpScreenState extends State<OtpScreen> {
                   Navigator.pop(context);
                 },
 
-                child: const Text(
+                child: Text(
                   "Change phone number",
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 10,
+                  style: AppTextStyles.small.copyWith(
                     decorationColor: AppColors.textSecondary,
                   ),
                 ),

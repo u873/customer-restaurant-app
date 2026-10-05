@@ -1,12 +1,13 @@
-import 'package:customer_estaurant_app/core/theme/app_colors.dart';
-import 'package:customer_estaurant_app/features/about/view/content_screen.dart';
-import 'package:customer_estaurant_app/features/auth/controller/auth_controller.dart';
-import 'package:customer_estaurant_app/features/cart/view/cart_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/home_bottom_nav.dart';
+import '../../about/view/content_screen.dart';
+import '../../auth/controller/auth_controller.dart';
+import '../../cart/view/cart_screen.dart';
 import '../../order_tracking/view/order_tracking_screen.dart';
 import '../controller/home_controller.dart';
 
@@ -66,9 +67,25 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
       if (!mounted) return;
 
       final authController = context.read<AuthController>();
+      final addressController = context.read<AddressController>();
+      final menuProvider = context.read<MenuProvider>();
+      final cartProvider = context.read<CartProvider>();
 
       if (authController.isLoggedIn || authController.isGuest) {
-        await context.read<AddressController>().getCustomerAddresses();
+        await addressController.getCustomerAddresses();
+
+        if (!mounted) return;
+
+        final selectedAddress = addressController.selectedAddress;
+
+        if (selectedAddress != null) {
+          await menuProvider.setDeliveryLocation(
+            address: selectedAddress.address1,
+            lat: selectedAddress.latitude,
+            lng: selectedAddress.longitude,
+            orderAmount: cartProvider.subtotal,
+          );
+        }
       }
     });
 
@@ -129,6 +146,12 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (sheetContext) {
+        final isDeliverySelected =
+            menuProvider.selectedOrderType == OrderType.delivery;
+
+        final isPickupSelected =
+            menuProvider.selectedOrderType == OrderType.pickup;
+
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 25),
           decoration: const BoxDecoration(
@@ -151,18 +174,14 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
 
               const Text(
                 "How would you like to order?",
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppTextStyles.heading,
               ),
 
               const SizedBox(height: 6),
 
               const Text(
                 "Choose your preferred order type",
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: AppTextStyles.bodySecondary,
               ),
 
               const SizedBox(height: 20),
@@ -180,51 +199,61 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                   if (sheetContext.mounted) {
                     Navigator.pop(sheetContext);
                   }
+
                   onCompleted?.call();
                 },
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.foodCardBackground,
+                    color: isDeliverySelected
+                        ? AppColors.primary.withValues(alpha: 0.15)
+                        : AppColors.foodCardBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(
+                      color: isDeliverySelected
+                          ? AppColors.primary
+                          : AppColors.border,
+                      width: isDeliverySelected ? 2 : 1,
+                    ),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Icon(
                         Icons.delivery_dining_outlined,
                         color: AppColors.primary,
                         size: 30,
                       ),
-                      SizedBox(width: 14),
-                      Expanded(
+
+                      const SizedBox(width: 14),
+
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Delivery",
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            Text("Delivery", style: AppTextStyles.body),
+
                             SizedBox(height: 4),
+
                             Text(
                               "Get your food delivered to your address",
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
-                              ),
+                              style: AppTextStyles.small,
                             ),
                           ],
                         ),
                       ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: AppColors.iconSecondary,
-                        size: 15,
-                      ),
+
+                      if (isDeliverySelected)
+                        const Icon(
+                          Icons.check_circle,
+                          color: AppColors.primary,
+                          size: 25,
+                        )
+                      else
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          color: AppColors.iconSecondary,
+                          size: 15,
+                        ),
                     ],
                   ),
                 ),
@@ -245,51 +274,64 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                   if (sheetContext.mounted) {
                     Navigator.pop(sheetContext);
                   }
+
                   onCompleted?.call();
                 },
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.foodCardBackground,
+                    color: isPickupSelected
+                        ? AppColors.primary.withValues(alpha: 0.15)
+                        : AppColors.foodCardBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(
+                      color: isPickupSelected
+                          ? AppColors.primary
+                          : AppColors.border,
+                      width: isPickupSelected ? 2 : 1,
+                    ),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Icon(
                         Icons.storefront_outlined,
                         color: AppColors.primary,
                         size: 28,
                       ),
-                      SizedBox(width: 14),
-                      Expanded(
+
+                      const SizedBox(width: 14),
+
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               "Pickup / Takeaway",
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: AppTextStyles.body,
                             ),
+
                             SizedBox(height: 4),
+
                             Text(
                               "Pick up your order from the branch",
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
-                              ),
+                              style: AppTextStyles.small,
                             ),
                           ],
                         ),
                       ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: AppColors.iconSecondary,
-                        size: 15,
-                      ),
+
+                      if (isPickupSelected)
+                        const Icon(
+                          Icons.check_circle,
+                          color: AppColors.primary,
+                          size: 25,
+                        )
+                      else
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          color: AppColors.iconSecondary,
+                          size: 15,
+                        ),
                     ],
                   ),
                 ),
@@ -342,9 +384,21 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
   }
 
   void onCategoryChanged(int index) {
-    context.read<HomeController>().setCategory(index);
+    final homeController = context.read<HomeController>();
 
-    _menuListKey.currentState?.scrollToCategory(index);
+    // Search ke baad "All types" select karne par
+    // search clear kar do taake complete menu render ho.
+    if (index == 0 && homeController.searchQuery.trim().isNotEmpty) {
+      homeController.resetSearch();
+    }
+
+    homeController.setCategory(index);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _menuListKey.currentState?.scrollToCategory(index);
+    });
   }
 
   void _openHome() {
@@ -416,6 +470,24 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
     );
   }
 
+  void _openProfileGuestSignup() {
+    final menuProvider = context.read<MenuProvider>();
+
+    context.read<HomeController>().setOverlay(
+      GuestSignupScreen(
+        restaurantId: menuProvider.restaurantId,
+
+        onClose: () {
+          context.read<HomeController>().setSelectedNavIndex(3);
+        },
+
+        onGuestSignupSuccess: () {
+          context.read<HomeController>().setSelectedNavIndex(3);
+        },
+      ),
+    );
+  }
+
   void _showCheckout({bool autoPlaceOrder = false}) {
     context.read<HomeController>().setOverlay(
       CheckoutScreen(
@@ -437,7 +509,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
   void _openCheckoutAddressChange() {
     context.read<HomeController>().setOverlay(
       CustomerAddressesScreen(
-        selectionOnly: true,
+        selectionOnly: false,
 
         onClose: () {
           _showCheckout();
@@ -609,18 +681,11 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
             borderRadius: BorderRadius.circular(16),
           ),
 
-          title: const Text(
-            "Exit App?",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          title: const Text("Exit App?", style: AppTextStyles.dialogContent),
 
           content: const Text(
             "Do you want to exit the app?",
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+            style: AppTextStyles.dialogContent,
           ),
 
           actions: [
@@ -692,22 +757,14 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                                 children: [
                                   Text(
                                     "What do you want to eat today?",
-                                    style: TextStyle(
-                                      color: Color(0xffA8A8AA),
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w400,
-                                    ),
+                                    style: AppTextStyles.subtitle,
                                   ),
 
                                   SizedBox(height: 4),
 
                                   Text(
                                     "Choose Your Favorite Food",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    style: AppTextStyles.heading,
                                   ),
                                 ],
                               ),
@@ -719,11 +776,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                                 padding: EdgeInsets.only(bottom: 2, left: 12),
                                 child: Text(
                                   "See All",
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: AppTextStyles.action,
                                 ),
                               ),
                             ),
@@ -737,6 +790,8 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                     SliverToBoxAdapter(
                       child: CategoryList(
                         selectedIndex: homeController.selectedCategory,
+                        searchQuery: homeController.searchQuery ?? '',
+                        isSearching: homeController.isSearching,
                         onCategoryChanged: onCategoryChanged,
                       ),
                     ),
@@ -807,6 +862,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
         },
 
         onClose: _openHome,
+        onGuestSignup: _openProfileGuestSignup,
       );
     }
 

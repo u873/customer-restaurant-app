@@ -1,4 +1,5 @@
 import 'package:customer_estaurant_app/core/theme/app_colors.dart';
+import 'package:customer_estaurant_app/core/theme/app_text_styles.dart';
 import 'package:customer_estaurant_app/features/home/widgets/branch_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -41,6 +42,7 @@ class _CustomHeaderState extends State<CustomHeader> {
     });
 
     widget.onSearchStateChanged(true);
+
     Future.delayed(const Duration(milliseconds: 250), () {
       if (mounted) {
         _searchFocusNode.requestFocus();
@@ -52,6 +54,7 @@ class _CustomHeaderState extends State<CustomHeader> {
     _searchFocusNode.unfocus();
     _searchController.clear();
     widget.onSearchChanged("");
+
     setState(() {
       _isSearching = false;
     });
@@ -75,6 +78,7 @@ class _CustomHeaderState extends State<CustomHeader> {
     final menuProvider = context.watch<MenuProvider>();
 
     final branchController = context.watch<BranchController>();
+
     final branch =
         branchController.selectedBranch ?? menuProvider.nearestBranch;
 
@@ -113,7 +117,6 @@ class _CustomHeaderState extends State<CustomHeader> {
           child: InkWell(
             borderRadius: BorderRadius.circular(8),
             onTap: _openBranchSelection,
-
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -121,12 +124,9 @@ class _CustomHeaderState extends State<CustomHeader> {
                   menuProvider.selectedOrderType == OrderType.delivery
                       ? "Delivery From"
                       : "Pick-Up From",
-
                   maxLines: 1,
-
                   overflow: TextOverflow.ellipsis,
-
-                  style: const TextStyle(color: Colors.white60, fontSize: 11),
+                  style: AppTextStyles.small.copyWith(color: Colors.white60),
                 ),
 
                 const SizedBox(height: 2),
@@ -136,14 +136,10 @@ class _CustomHeaderState extends State<CustomHeader> {
                     Flexible(
                       child: Text(
                         branch?.name ?? "Finding nearest branch...",
-
                         maxLines: 1,
-
                         overflow: TextOverflow.ellipsis,
-
-                        style: const TextStyle(
+                        style: AppTextStyles.body.copyWith(
                           color: Colors.white,
-                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -167,19 +163,14 @@ class _CustomHeaderState extends State<CustomHeader> {
 
         InkWell(
           borderRadius: BorderRadius.circular(30),
-
           onTap: _openSearch,
-
           child: Container(
             width: 42,
             height: 42,
-
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-
               border: Border.all(color: Colors.white38),
             ),
-
             child: const Icon(Icons.search, color: Colors.white, size: 21),
           ),
         ),
@@ -194,56 +185,38 @@ class _CustomHeaderState extends State<CustomHeader> {
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
-
         onChanged: widget.onSearchChanged,
-
         cursorColor: AppColors.primary,
-
-        style: const TextStyle(color: Colors.white, fontSize: 14),
-
+        style: AppTextStyles.body.copyWith(color: Colors.white),
         decoration: InputDecoration(
           hintText: "Search food...",
-
-          hintStyle: const TextStyle(color: Colors.white54, fontSize: 14),
-
+          hintStyle: AppTextStyles.body.copyWith(color: Colors.white54),
           prefixIcon: const Icon(Icons.search, color: Colors.white70, size: 21),
-
           suffixIcon: InkWell(
             borderRadius: BorderRadius.circular(30),
-
             onTap: _closeSearch,
-
             child: const Icon(
               Icons.close_rounded,
               color: Colors.white,
               size: 21,
             ),
           ),
-
           filled: true,
-
           fillColor: const Color(0xff292A2D),
-
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 0,
           ),
-
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24),
-
             borderSide: BorderSide.none,
           ),
-
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24),
-
             borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
           ),
-
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24),
-
             borderSide: const BorderSide(color: AppColors.primary, width: 1),
           ),
         ),

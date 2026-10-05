@@ -3,11 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/food_card.dart';
 import '../../cart/controller/cart_controller.dart';
 import '../../cart/model/cart_item.dart';
 import '../../menu/controller/menu_controller.dart';
 import '../../menu/model/main_data_response.dart';
-import '../../../core/widgets/food_card.dart';
 
 class MenuList extends StatefulWidget {
   final int selectedCategoryIndex;
@@ -32,6 +33,13 @@ class MenuList extends StatefulWidget {
   State<MenuList> createState() => MenuListState();
 }
 
+class _MenuEntry {
+  final Menu item;
+  final int apiCategoryIndex;
+
+  const _MenuEntry({required this.item, required this.apiCategoryIndex});
+}
+
 class MenuListState extends State<MenuList> {
   final ItemScrollController _itemScrollController = ItemScrollController();
 
@@ -39,6 +47,8 @@ class MenuListState extends State<MenuList> {
       ItemPositionsListener.create();
 
   bool _isScrollingFromCategory = false;
+
+  int? _addingItemId;
 
   @override
   void initState() {
@@ -54,55 +64,93 @@ class MenuListState extends State<MenuList> {
     super.dispose();
   }
 
-  void scrollToCategory(int categoryIndex) {
-    if (widget.isSearching || widget.searchQuery.trim().isNotEmpty) {
-      return;
+  List<_MenuEntry> _buildMenuEntries(List<RestaurantBranchMenu> categories) {
+    final entries = <_MenuEntry>[];
+
+    for (
+      int categoryIndex = 0;
+      categoryIndex < categories.length;
+      categoryIndex++
+    ) {
+      for (final item in categories[categoryIndex].menu) {
+        entries.add(_MenuEntry(item: item, apiCategoryIndex: categoryIndex));
+      }
     }
 
+    return entries;
+  }
+
+  List<_MenuEntry> _filterMenuEntries(List<_MenuEntry> entries) {
+    final query = widget.searchQuery.trim().toLowerCase();
+
+    if (query.isEmpty) {
+      return entries;
+    }
+
+    return entries.where((entry) {
+      final name = entry.item.name.toLowerCase();
+      final description = entry.item.description?.toLowerCase() ?? '';
+
+      return name.contains(query) || description.contains(query);
+    }).toList();
+  }
+
+  CartItem? _getCartItem(CartProvider cartProvider, int menuId) {
+    for (final cartItem in cartProvider.cartItems) {
+      if (cartItem.menuId == menuId) {
+        return cartItem;
+      }
+    }
+
+    return null;
+  }
+
+  void scrollToCategory(int categoryIndex) {
     final provider = context.read<MenuProvider>();
 
     final categories = provider.menuResponse?.data.restaurantBranchMenu ?? [];
 
-    // Menu loading ke waqt category scroll nahi karna
-    if (provider.isLoading) {
+    if (provider.isLoading || categories.isEmpty) {
       return;
-    }
-
-    if (categories.isEmpty) {
-      return;
-    }
-
-    if (categoryIndex == 0) {
-      if (_itemScrollController.isAttached) {
-        _isScrollingFromCategory = true;
-
-        _itemScrollController
-            .scrollTo(
-              index: 0,
-              duration: const Duration(milliseconds: 450),
-              curve: Curves.easeInOut,
-            )
-            .whenComplete(() {
-              _isScrollingFromCategory = false;
-            });
-      }
-
-      return;
-    }
-
-    final actualCategoryIndex = categoryIndex - 1;
-
-    if (actualCategoryIndex < 0 || actualCategoryIndex >= categories.length) {
-      return;
-    }
-
-    int firstItemIndex = 0;
-
-    for (int i = 0; i < actualCategoryIndex; i++) {
-      firstItemIndex += categories[i].menu.length;
     }
 
     if (!_itemScrollController.isAttached) {
+      return;
+    }
+
+    final allEntries = _buildMenuEntries(categories);
+    final entries = _filterMenuEntries(allEntries);
+
+    // All types
+    if (categoryIndex == 0) {
+      if (entries.isEmpty) {
+        return;
+      }
+
+      _isScrollingFromCategory = true;
+
+      _itemScrollController
+          .scrollTo(
+        index: 0,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeInOut,
+      )
+          .whenComplete(() {
+        _isScrollingFromCategory = false;
+      });
+
+      return;
+    }
+
+    final apiCategoryIndex = categoryIndex - 1;
+
+    // Search ke waqt filtered list mein is category ka
+    // pehla matching item find karo.
+    final itemIndex = entries.indexWhere(
+          (entry) => entry.apiCategoryIndex == apiCategoryIndex,
+    );
+
+    if (itemIndex == -1) {
       return;
     }
 
@@ -110,27 +158,22 @@ class MenuListState extends State<MenuList> {
 
     _itemScrollController
         .scrollTo(
-          index: firstItemIndex,
-          duration: const Duration(milliseconds: 450),
-          curve: Curves.easeInOut,
-        )
+      index: itemIndex,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeInOut,
+    )
         .whenComplete(() {
-          _isScrollingFromCategory = false;
-        });
+      _isScrollingFromCategory = false;
+    });
   }
 
   void _onItemsChanged() {
-    if (widget.isSearching || widget.searchQuery.trim().isNotEmpty) {
-      return;
-    }
-
     if (_isScrollingFromCategory) {
       return;
     }
 
     final provider = context.read<MenuProvider>();
 
-    // Loading ke waqt category calculation nahi karni
     if (provider.isLoading) {
       return;
     }
@@ -162,42 +205,23 @@ class MenuListState extends State<MenuList> {
 
     final currentItemIndex = visibleItems.first.index;
 
-    int runningItemCount = 0;
+    final allEntries = _buildMenuEntries(categories);
+    final filteredEntries = _filterMenuEntries(allEntries);
 
-    for (int i = 0; i < categories.length; i++) {
-      final categoryItemCount = categories[i].menu.length;
-
-      final categoryStart = runningItemCount;
-
-      final categoryEnd = runningItemCount + categoryItemCount - 1;
-
-      if (currentItemIndex >= categoryStart &&
-          currentItemIndex <= categoryEnd) {
-        final newCategoryIndex = i + 1;
-
-        if (newCategoryIndex != widget.selectedCategoryIndex) {
-          widget.onCategoryChanged(newCategoryIndex);
-        }
-
-        break;
-      }
-
-      runningItemCount += categoryItemCount;
-    }
-  }
-
-  CartItem? _getCartItem(CartProvider cartProvider, int menuId) {
-    for (final cartItem in cartProvider.cartItems) {
-      if (cartItem.menuId == menuId) {
-        return cartItem;
-      }
+    if (currentItemIndex < 0 || currentItemIndex >= filteredEntries.length) {
+      return;
     }
 
-    return null;
+    final apiCategoryIndex = filteredEntries[currentItemIndex].apiCategoryIndex;
+
+    final newCategoryIndex = apiCategoryIndex + 1;
+
+    if (newCategoryIndex != widget.selectedCategoryIndex) {
+      widget.onCategoryChanged(newCategoryIndex);
+    }
   }
 
   String _getItemImage(Menu item, List<RestaurantBranchMenu> categories) {
-    // 1. Item ki image
     final itemImageUrl = item.imageUrl ?? '';
 
     if (itemImageUrl.trim().isNotEmpty) {
@@ -210,7 +234,6 @@ class MenuListState extends State<MenuList> {
       return itemImage;
     }
 
-    // 2. Category ki image
     for (final category in categories) {
       final itemExists = category.menu.any(
         (categoryItem) => categoryItem.id == item.id,
@@ -235,7 +258,6 @@ class MenuListState extends State<MenuList> {
       break;
     }
 
-    // 3. Koi image nahi
     return '';
   }
 
@@ -248,7 +270,6 @@ class MenuListState extends State<MenuList> {
 
     return items.where((item) {
       final name = item.name.toLowerCase();
-
       final description = item.description?.toLowerCase() ?? "";
 
       return name.contains(query) || description.contains(query);
@@ -284,10 +305,142 @@ class MenuListState extends State<MenuList> {
     );
   }
 
+  Future<void> _addSimpleItemToCart({
+    required Menu item,
+    required double selectedPrice,
+    required double deliveryPrice,
+    required double takeAwayPrice,
+    required OrderType orderType,
+  }) async {
+    if (_addingItemId != null) {
+      return;
+    }
+
+    setState(() {
+      _addingItemId = item.id;
+    });
+
+    final newCartItem = CartItem(
+      menuId: item.id,
+      name: item.name,
+      quantity: 1,
+      selectedPrice: selectedPrice,
+      deliveryPrice: deliveryPrice,
+      takeAwayPrice: takeAwayPrice,
+      orderType: orderType == OrderType.delivery ? "delivery" : "takeaway",
+      imageUrl: item.imageUrl ?? "",
+    );
+
+    try {
+      await context.read<CartProvider>().addToCart(newCartItem);
+
+      if (!mounted) {
+        return;
+      }
+
+      await Future.delayed(const Duration(milliseconds: 450));
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _addingItemId = null;
+      });
+
+      _showAddedToCartSnackBar(itemName: item.name);
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _addingItemId = null;
+      });
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Failed to add item to cart',
+              style: AppTextStyles.body,
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    }
+  }
+
+  Widget _buildFoodCardWithAddEffect({
+    required Menu item,
+    required String imageUrl,
+    required String price,
+    required List<RestaurantBranchMenu> categories,
+  }) {
+    final isAdding = _addingItemId == item.id;
+
+    return Stack(
+      children: [
+        AnimatedOpacity(
+          duration: const Duration(milliseconds: 180),
+          opacity: isAdding ? 0.45 : 1.0,
+          child: FoodCard(
+            imageUrl: imageUrl,
+            name: item.name,
+            price: price,
+            description: item.description,
+          ),
+        ),
+        if (isAdding)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.28),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Center(
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 150),
+                  opacity: isAdding ? 1 : 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.72),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Text('Adding...', style: AppTextStyles.action),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<MenuProvider>();
-
     final cartProvider = context.watch<CartProvider>();
 
     final categories = provider.menuResponse?.data.restaurantBranchMenu ?? [];
@@ -300,10 +453,10 @@ class MenuListState extends State<MenuList> {
       return const SizedBox();
     }
 
-    final allItems = categories.expand((category) => category.menu).toList();
-    final filteredItems = _filterItems(allItems);
+    final allEntries = _buildMenuEntries(categories);
+    final filteredEntries = _filterMenuEntries(allEntries);
 
-    if (filteredItems.isEmpty) {
+    if (filteredEntries.isEmpty) {
       return SizedBox(
         height: 180,
         child: Center(
@@ -315,12 +468,10 @@ class MenuListState extends State<MenuList> {
                 color: Colors.white54,
                 size: 35,
               ),
-
               const SizedBox(height: 10),
-
               Text(
-                "No items found for \"${widget.searchQuery}\"",
-                style: const TextStyle(color: Colors.white54, fontSize: 13),
+                'No items found for "${widget.searchQuery}"',
+                style: AppTextStyles.subtitle.copyWith(color: Colors.white54),
               ),
             ],
           ),
@@ -332,23 +483,17 @@ class MenuListState extends State<MenuList> {
       height: 450,
       child: ScrollablePositionedList.separated(
         scrollDirection: Axis.horizontal,
-
         itemScrollController: _itemScrollController,
-
         itemPositionsListener: _itemPositionsListener,
-
         physics: const BouncingScrollPhysics(),
-
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-
-        itemCount: filteredItems.length,
-
+        itemCount: filteredEntries.length,
         separatorBuilder: (context, index) {
           return const SizedBox(width: 14);
         },
-
         itemBuilder: (context, index) {
-          final item = filteredItems[index];
+          final entry = filteredEntries[index];
+          final item = entry.item;
 
           final menuProvider = context.read<MenuProvider>();
 
@@ -361,62 +506,75 @@ class MenuListState extends State<MenuList> {
           final selectedPrice = orderType == OrderType.delivery
               ? deliveryPrice
               : takeAwayPrice;
+          final isNotSelectable = selectedPrice <= 0;
+
+          final notSelectableReason = orderType == OrderType.delivery
+              ? 'This item is not available for delivery'
+              : 'This item is not available for takeaway';
 
           final cartItem = _getCartItem(cartProvider, item.id);
+
           final isAddedToCart = cartItem != null;
+
           final cartQuantity = cartItem?.quantity ?? 0;
 
           if (isAddedToCart && cartQuantity < 0) {
             return const SizedBox();
           }
 
+          final hasVariations =
+              item.menuVariations != null && item.menuVariations!.isNotEmpty;
+
+          final hasChoices = item.choiceGroup.isNotEmpty;
+
+          final isDeal = item.isDeal == true;
+
           return SizedBox(
             width: 220,
             child: GestureDetector(
               onTap: () async {
-                if (item.isDeal == true) {
-                  widget.onDealTap(item);
+                if (isNotSelectable) {
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          notSelectableReason,
+                          style: AppTextStyles.body,
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
                   return;
                 }
 
-                final hasVariations =
-                    item.menuVariations != null &&
-                    item.menuVariations!.isNotEmpty;
-
-                final hasChoices = item.choiceGroup.isNotEmpty;
+                if (isDeal) {
+                  widget.onDealTap(item);
+                  return;
+                }
 
                 if (hasVariations || hasChoices) {
                   widget.onProductTap(item);
                   return;
                 }
 
-                final newCartItem = CartItem(
-                  menuId: item.id,
-                  name: item.name,
-                  quantity: 1,
+                await _addSimpleItemToCart(
+                  item: item,
                   selectedPrice: selectedPrice,
                   deliveryPrice: deliveryPrice,
                   takeAwayPrice: takeAwayPrice,
-                  orderType: orderType == OrderType.delivery
-                      ? "delivery"
-                      : "takeaway",
-                  imageUrl: item.imageUrl ?? "",
+                  orderType: orderType,
                 );
-
-                await context.read<CartProvider>().addToCart(newCartItem);
-
-                if (!mounted) {
-                  return;
-                }
-
-                _showAddedToCartSnackBar(itemName: item.name);
               },
-
-              child: FoodCard(
-                imageUrl: _getItemImage(item, categories),
-                name: item.name,
-                price: selectedPrice.toStringAsFixed(0),
-                description: item.description,
+              child: Opacity(
+                opacity: isNotSelectable ? 0.45 : 1.0,
+                child: _buildFoodCardWithAddEffect(
+                  item: item,
+                  imageUrl: _getItemImage(item, categories),
+                  price: selectedPrice.toStringAsFixed(0),
+                  categories: categories,
+                ),
               ),
             ),
           );
@@ -437,21 +595,18 @@ class MenuListState extends State<MenuList> {
           content: Row(
             children: [
               const Icon(Icons.check_circle, color: Colors.white, size: 20),
-
               const SizedBox(width: 10),
-
               Expanded(
                 child: Text(
                   '$itemName added to cart',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body.copyWith(color: Colors.white),
                 ),
               ),
             ],
           ),
-
           duration: const Duration(seconds: 2),
-
           behavior: SnackBarBehavior.floating,
         ),
       );

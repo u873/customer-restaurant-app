@@ -140,7 +140,12 @@ class Data {
     isDinein: json["is_dinein"] ?? false,
     isFreedelivery: json["is_freedelivery"] ?? false,
     isTakeaway: json["is_takeaway"] ?? 0,
-    taxInclude: json["tax_include"] ?? false,
+    taxInclude:
+    json["isTaxInclude"] ??
+        json["is_tax_include"] ??
+        json["istaxinclude"] ??
+        json["tax_include"] ??
+        false,
     taxPercent: json["tax_percent"]?.toString() ?? "",
     logo: json["logo"]?.toString(),
     logoUrl: json["logo_url"]?.toString() ?? "",

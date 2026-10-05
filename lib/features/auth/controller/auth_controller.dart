@@ -169,7 +169,9 @@ class AuthController extends ChangeNotifier {
             token = result.data['token']?.toString();
           }
           if (token != null && token.isNotEmpty) {
-            await SharedPrefService.clearGuestSession();
+            await SharedPrefService.clearGuestSession(
+              clearSavedAddress: false,
+            );
 
             _isGuest = false;
             _guestToken = null;
@@ -247,7 +249,9 @@ class AuthController extends ChangeNotifier {
           _token = null;
           _customerId = null;
           _user = null;
-          await SharedPrefService.clearSession();
+          await SharedPrefService.clearSession(
+            clearSavedAddress: false,
+          );
 
           await SharedPrefService.saveGuestStatus(true);
           if (guestData.token.isNotEmpty) {
@@ -328,7 +332,10 @@ class AuthController extends ChangeNotifier {
             final token = userData['token']?.toString();
 
             if (token != null && token.isNotEmpty) {
-              await SharedPrefService.clearGuestSession();
+              await SharedPrefService.clearGuestSession(
+                  clearSavedAddress: false,
+              );
+
 
               _isGuest = false;
               _guestToken = null;
@@ -402,7 +409,9 @@ class AuthController extends ChangeNotifier {
 
         if (token != null && token.isNotEmpty) {
           // Clear guest if any
-          await SharedPrefService.clearGuestSession();
+          await SharedPrefService.clearGuestSession(
+            clearSavedAddress: false,
+          );
 
           _isGuest = false;
           _guestToken = null;

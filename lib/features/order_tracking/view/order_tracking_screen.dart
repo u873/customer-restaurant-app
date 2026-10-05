@@ -1,7 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../controller/order_tracking_controller.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
@@ -35,6 +39,41 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     });
   }
 
+  Future<void> launchUrlForPhoneNumber(BuildContext context) async {
+    final phoneNumber = _controller.riderPhoneNumber.trim();
+
+    if (phoneNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Rider phone number is not available'),
+        ),
+      );
+      return;
+    }
+
+    final telUrl = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+
+    await launchUrl(telUrl).then((value) {
+      if (!value) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Something went wrong'),
+          ),
+        );
+      }
+    }).onError((error, stackTrace) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Something went wrong'),
+        ),
+      );
+      log('e:$error');
+    });
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -56,13 +95,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               onPressed: widget.onClose,
               icon: const Icon(Icons.arrow_back, color: AppColors.iconPrimary),
             ),
-            title: const Text(
+            title: Text(
               'Track Order',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-                fontSize: 18,
-              ),
+              style: AppTextStyles.title.copyWith(fontWeight: FontWeight.w600),
             ),
             centerTitle: true,
           ),
@@ -107,20 +142,19 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               ),
             ),
             const SizedBox(height: 18),
-            const Text(
+            Text(
               'Tracking information not available',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textPrimary,
+              style: AppTextStyles.heading.copyWith(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Rider location is not available yet.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: AppTextStyles.bodySecondary.copyWith(fontSize: 13),
             ),
             const SizedBox(height: 22),
             SizedBox(
@@ -138,9 +172,11 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Retry',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.button.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -219,21 +255,16 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Order Tracking',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
+                  style: AppTextStyles.title.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   'Order #${widget.orderId}',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
+                  style: AppTextStyles.bodySecondary,
                 ),
               ],
             ),
@@ -247,9 +278,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             ),
             child: Text(
               _controller.hasArrived ? 'Arrived' : 'On the way',
-              style: const TextStyle(
+              style: AppTextStyles.small.copyWith(
                 color: AppColors.primary,
-                fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -290,18 +320,11 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Your Rider',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
-                        ),
-                      ),
+                      Text('Your Rider', style: AppTextStyles.small),
                       const SizedBox(height: 2),
                       Text(
                         _controller.riderName,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: AppTextStyles.body.copyWith(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
@@ -319,7 +342,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                     ),
                     child: IconButton(
                       padding: EdgeInsets.zero,
-                      onPressed: () {},
+                      onPressed: () => launchUrlForPhoneNumber(context),
                       icon: const Icon(
                         Icons.phone_outlined,
                         size: 19,
@@ -353,8 +376,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                         : 'Delivery location',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
+                    style: AppTextStyles.body.copyWith(
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -367,9 +389,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             children: [
               const Icon(Icons.sync, size: 16, color: AppColors.primary),
               const SizedBox(width: 6),
-              const Text(
+              Text(
                 'Location updates automatically',
-                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                style: AppTextStyles.small,
               ),
             ],
           ),
@@ -404,12 +426,10 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             children: [
               const Icon(Icons.check_circle, color: AppColors.primary),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Your rider has arrived near the delivery location.',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
+                  style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../model/loyalty_transaction_model.dart';
 import '../model/point_convert_package_model.dart';
 import '../provider/loyalty_provider.dart';
@@ -60,16 +61,9 @@ class _LoyaltyHistoryScreenState extends State<LoyaltyHistoryScreen> {
                       ),
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Center(
-                      child: Text(
-                        "Loyalty Points",
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: Text("Loyalty Points", style: AppTextStyles.title),
                     ),
                   ),
                   const SizedBox(width: 36, height: 36),
@@ -95,9 +89,7 @@ class _LoyaltyHistoryScreenState extends State<LoyaltyHistoryScreen> {
                         child: Text(
                           loyalty.errorMessage!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: AppTextStyles.bodySecondary,
                         ),
                       ),
                     );
@@ -125,24 +117,14 @@ class _LoyaltyHistoryScreenState extends State<LoyaltyHistoryScreen> {
                               ),
                             ),
                             icon: const Icon(Icons.redeem),
-                            label: const Text(
+                            label: Text(
                               "Redeem Points",
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: AppTextStyles.button,
                             ),
                           ),
                         ),
                         const SizedBox(height: 28),
-                        const Text(
-                          "Points History",
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        Text("Points History", style: AppTextStyles.title),
                         const SizedBox(height: 12),
                         if (loyalty.loyaltyTransactions.isEmpty)
                           const _EmptyHistory()
@@ -196,19 +178,9 @@ class _PointsCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Available Points",
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-              ),
+              Text("Available Points", style: AppTextStyles.subtitle),
               const SizedBox(height: 5),
-              Text(
-                points.toStringAsFixed(0),
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text(points.toStringAsFixed(0), style: AppTextStyles.largeValue),
             ],
           ),
         ],
@@ -229,14 +201,14 @@ class _EmptyHistory extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.history, color: AppColors.iconSecondary, size: 45),
-          SizedBox(height: 12),
+          const Icon(Icons.history, color: AppColors.iconSecondary, size: 45),
+          const SizedBox(height: 12),
           Text(
             "No loyalty transactions yet",
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            style: AppTextStyles.bodySecondary,
           ),
         ],
       ),
@@ -305,16 +277,9 @@ class _LoyaltyRedemptionScreenState extends State<LoyaltyRedemptionScreen> {
                       ),
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Center(
-                      child: Text(
-                        "Redeem Points",
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: Text("Redeem Points", style: AppTextStyles.title),
                     ),
                   ),
                   const SizedBox(width: 36, height: 36),
@@ -340,19 +305,17 @@ class _LoyaltyRedemptionScreenState extends State<LoyaltyRedemptionScreen> {
                         child: Text(
                           loyalty.errorMessage!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: AppTextStyles.bodySecondary,
                         ),
                       ),
                     );
                   }
 
                   if (loyalty.packages.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Text(
                         "No redemption packages available",
-                        style: TextStyle(color: AppColors.textSecondary),
+                        style: AppTextStyles.bodySecondary,
                       ),
                     );
                   }
@@ -386,20 +349,16 @@ class _LoyaltyRedemptionScreenState extends State<LoyaltyRedemptionScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   "Your Points",
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
+                                  style: AppTextStyles.subtitle,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   loyalty.loyaltyPoints.toStringAsFixed(0),
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
+                                  style: AppTextStyles.price.copyWith(
                                     fontSize: 23,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ],
@@ -408,14 +367,7 @@ class _LoyaltyRedemptionScreenState extends State<LoyaltyRedemptionScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      const Text(
-                        "Available Packages",
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      Text("Available Packages", style: AppTextStyles.title),
                       const SizedBox(height: 12),
                       ...loyalty.packages.map((package) {
                         return _PackageCard(
@@ -447,11 +399,11 @@ class _LoyaltyRedemptionScreenState extends State<LoyaltyRedemptionScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           backgroundColor: AppColors.primary,
           content: Text(
             "Points converted to wallet successfully.",
-            style: TextStyle(color: AppColors.textOnPrimary),
+            style: AppTextStyles.button,
           ),
         ),
       );
@@ -463,7 +415,7 @@ class _LoyaltyRedemptionScreenState extends State<LoyaltyRedemptionScreen> {
           backgroundColor: AppColors.cardBackground,
           content: Text(
             loyalty.errorMessage!,
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
           ),
         ),
       );
@@ -517,19 +469,14 @@ class _PackageCard extends StatelessWidget {
               children: [
                 Text(
                   package.name,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
+                  style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 5),
                 Text(
                   "${package.points.toStringAsFixed(0)} Points → Rs. ${package.amount.toStringAsFixed(0)}",
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                  ),
+                  style: AppTextStyles.bodySecondary,
                 ),
               ],
             ),
@@ -552,7 +499,7 @@ class _PackageCard extends StatelessWidget {
             ),
             child: Text(
               canRedeem ? "Redeem" : "Not Enough",
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+              style: AppTextStyles.button.copyWith(fontSize: 11),
             ),
           ),
         ],

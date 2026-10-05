@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../cart/controller/cart_controller.dart';
 import '../../cart/model/cart_item.dart';
 import '../controller/menu_controller.dart';
@@ -16,7 +17,7 @@ class ProductDetailScreen extends StatefulWidget {
     super.key,
     required this.item,
     required this.onClose,
-    this.onAddedToCart
+    this.onAddedToCart,
   });
 
   @override
@@ -141,10 +142,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               textAlign: TextAlign.center,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: AppTextStyles.heading.copyWith(
                                 fontSize: 17,
-                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -209,12 +208,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         children: [
                           Row(
                             children: [
-                              const Expanded(
+                              Expanded(
                                 child: Text(
                                   "Description",
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 15,
+                                  style: AppTextStyles.title.copyWith(
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -243,19 +240,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 : "Enjoy our delicious food prepared with fresh ingredients and amazing flavor.",
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 11,
+                            style: AppTextStyles.bodySecondary.copyWith(
                               height: 1.4,
                             ),
                           ),
                           const SizedBox(height: 18),
                           if (variations.isNotEmpty) ...[
-                            const Text(
+                            Text(
                               "Choose Variation",
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 14,
+                              style: AppTextStyles.price.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -273,11 +266,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             const SizedBox(height: 18),
                           ],
                           if (currentChoiceGroups.isNotEmpty) ...[
-                            const Text(
+                            Text(
                               "Choices",
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 14,
+                              style: AppTextStyles.price.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -319,18 +310,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               "Price",
-                              style: TextStyle(
+                              style: AppTextStyles.small.copyWith(
                                 color: Colors.white70,
-                                fontSize: 9,
                               ),
                             ),
                             Text(
                               "Rs ${totalPrice.toStringAsFixed(2)}",
-                              style: const TextStyle(
+                              style: AppTextStyles.price.copyWith(
                                 color: AppColors.white,
-                                fontSize: 14,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -349,12 +338,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           borderRadius: BorderRadius.circular(24),
                         ),
                         alignment: Alignment.center,
-                        child: const Text(
+                        child: Text(
                           "Add To Cart",
-                          style: TextStyle(
+                          style: AppTextStyles.button.copyWith(
                             color: AppColors.textPrimary,
                             fontSize: 12,
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -382,6 +370,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               "Please select at least "
               "${group.minChoices} option(s) "
               "from ${group.name}",
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textOnPrimary,
+              ),
             ),
           ),
         );
@@ -432,13 +423,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
 
     context.read<CartProvider>().addToCart(cartItem);
-    if(widget.onAddedToCart != null){
+    if (widget.onAddedToCart != null) {
       widget.onAddedToCart!();
     } else {
-    widget.onClose();
+      widget.onClose();
+    }
   }
-  }
-
 }
 
 class _CircleButton extends StatelessWidget {
@@ -494,9 +484,8 @@ class _QuantityControl extends StatelessWidget {
           ),
           Text(
             "$quantity",
-            style: const TextStyle(
+            style: AppTextStyles.bodySecondary.copyWith(
               color: Colors.white,
-              fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -551,11 +540,10 @@ class _VariationSelector extends StatelessWidget {
                   children: [
                     Text(
                       variation.name,
-                      style: TextStyle(
+                      style: AppTextStyles.small.copyWith(
                         color: selected
                             ? AppColors.textPrimary
                             : AppColors.textSecondary,
-                        fontSize: 10,
                         fontWeight: selected
                             ? FontWeight.w600
                             : FontWeight.w400,
@@ -564,11 +552,10 @@ class _VariationSelector extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       "Rs ${variation.price}",
-                      style: TextStyle(
+                      style: AppTextStyles.small.copyWith(
                         color: selected
                             ? AppColors.textPrimary
                             : AppColors.textSecondary,
-                        fontSize: 9,
                       ),
                     ),
                   ],
@@ -607,16 +594,15 @@ class _ChoiceGroupCard extends StatelessWidget {
         children: [
           Text(
             group.name,
-            style: const TextStyle(
+            style: AppTextStyles.body.copyWith(
               color: AppColors.textPrimary,
-              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             "Select ${group.minChoices} to ${group.maxChoices}",
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 9),
+            style: AppTextStyles.small.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 8),
           ...List.generate(group.choices.length, (index) {
@@ -642,6 +628,9 @@ class _ChoiceGroupCard extends StatelessWidget {
                           "You can select maximum "
                           "${group.maxChoices} option(s) "
                           "from ${group.name}",
+                          style: AppTextStyles.body.copyWith(
+                            color: AppColors.textOnPrimary,
+                          ),
                         ),
                       ),
                     );
@@ -681,17 +670,15 @@ class _ChoiceGroupCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         choice.name,
-                        style: const TextStyle(
+                        style: AppTextStyles.small.copyWith(
                           color: AppColors.textPrimary,
-                          fontSize: 10,
                         ),
                       ),
                     ),
                     Text(
                       "Rs ${choice.price}",
-                      style: const TextStyle(
+                      style: AppTextStyles.small.copyWith(
                         color: AppColors.textSecondary,
-                        fontSize: 10,
                       ),
                     ),
                   ],

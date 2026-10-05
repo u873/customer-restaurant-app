@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../auth/controller/auth_controller.dart';
 import '../../auth/model/user_model.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/api/api_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
 import '../../loyalty/provider/loyalty_provider.dart';
 import '../../menu/controller/menu_controller.dart';
 
@@ -45,7 +47,12 @@ class ProfileScreen extends StatelessWidget {
 
     if (updated == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile updated successfully")),
+        SnackBar(
+          content: Text(
+            "Profile updated successfully",
+            style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+          ),
+        ),
       );
     }
   }
@@ -76,30 +83,31 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
                   "Logout",
-                  style: TextStyle(
+                  style: AppTextStyles.dialogTitle.copyWith(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
           ),
-          content: const Text(
+          content: Text(
             "Are you sure you want to logout?",
-            style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.4),
+            style: AppTextStyles.dialogContent.copyWith(
+              color: Colors.white60,
+              height: 1.4,
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop(false);
               },
-              child: const Text(
+              child: Text(
                 "Cancel",
-                style: TextStyle(color: Colors.white60, fontSize: 12),
+                style: AppTextStyles.action.copyWith(color: Colors.white60),
               ),
             ),
             ElevatedButton(
@@ -118,9 +126,9 @@ class ProfileScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
+              child: Text(
                 "Logout",
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                style: AppTextStyles.button.copyWith(color: Colors.black),
               ),
             ),
           ],
@@ -153,7 +161,12 @@ class ProfileScreen extends StatelessWidget {
 
     if (changed == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password changed successfully")),
+        SnackBar(
+          content: Text(
+            "Password changed successfully",
+            style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+          ),
+        ),
       );
     }
   }
@@ -187,31 +200,32 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
                   "Delete Account",
-                  style: TextStyle(
+                  style: AppTextStyles.dialogTitle.copyWith(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
           ),
-          content: const Text(
+          content: Text(
             "Are you sure you want to delete your account? "
             "This action cannot be undone.",
-            style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.4),
+            style: AppTextStyles.dialogContent.copyWith(
+              color: Colors.white60,
+              height: 1.4,
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop(false);
               },
-              child: const Text(
+              child: Text(
                 "Cancel",
-                style: TextStyle(color: Colors.white60, fontSize: 12),
+                style: AppTextStyles.action.copyWith(color: Colors.white60),
               ),
             ),
             ElevatedButton(
@@ -230,9 +244,9 @@ class ProfileScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
+              child: Text(
                 "Delete",
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                style: AppTextStyles.button.copyWith(color: Colors.black),
               ),
             ),
           ],
@@ -243,9 +257,14 @@ class ProfileScreen extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
 
     if (user.customerId.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Customer ID not found")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Customer ID not found",
+            style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+          ),
+        ),
+      );
       return;
     }
 
@@ -293,7 +312,10 @@ class ProfileScreen extends StatelessWidget {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(auth.successMessage ?? "Account deleted successfully"),
+          content: Text(
+            auth.successMessage ?? "Account deleted successfully",
+            style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+          ),
         ),
       );
 
@@ -301,7 +323,10 @@ class ProfileScreen extends StatelessWidget {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(auth.errorMessage ?? "Unable to delete account"),
+          content: Text(
+            auth.errorMessage ?? "Unable to delete account",
+            style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+          ),
         ),
       );
     }
@@ -315,7 +340,12 @@ class ProfileScreen extends StatelessWidget {
 
     if (data == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Social media information not available")),
+        SnackBar(
+          content: Text(
+            "Social media information not available",
+            style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+          ),
+        ),
       );
       return;
     }
@@ -348,15 +378,27 @@ class ProfileScreen extends StatelessWidget {
         break;
 
       default:
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Invalid social type")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Invalid social type",
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textOnPrimary,
+              ),
+            ),
+          ),
+        );
         return;
     }
 
     if (url == null || url.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Social media link is not available")),
+        SnackBar(
+          content: Text(
+            "Social media link is not available",
+            style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+          ),
+        ),
       );
       return;
     }
@@ -370,9 +412,14 @@ class ProfileScreen extends StatelessWidget {
     final uri = Uri.tryParse(url);
 
     if (uri == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Invalid social media URL")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Invalid social media URL",
+            style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+          ),
+        ),
+      );
       return;
     }
 
@@ -388,15 +435,27 @@ class ProfileScreen extends StatelessWidget {
 
       if (!launched && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Unable to open this link")),
+          SnackBar(
+            content: Text(
+              "Unable to open this link",
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textOnPrimary,
+              ),
+            ),
+          ),
         );
       }
     } catch (e) {
       if (!context.mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Something went wrong",
+            style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+          ),
+        ),
+      );
     }
   }
 
@@ -470,14 +529,12 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Center(
                       child: Text(
                         "My Profile",
-                        style: TextStyle(
+                        style: AppTextStyles.title.copyWith(
                           color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -523,9 +580,8 @@ class ProfileScreen extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         user?.name ?? "User",
-                        style: const TextStyle(
+                        style: AppTextStyles.title.copyWith(
                           color: Colors.white,
-                          fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -545,9 +601,8 @@ class ProfileScreen extends StatelessWidget {
                                 "GOLD MEMBER • "
                                 "${loyalty.loyaltyPoints.toStringAsFixed(0)} "
                                 "POINTS",
-                                style: const TextStyle(
+                                style: AppTextStyles.small.copyWith(
                                   color: AppColors.primary,
-                                  fontSize: 10,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -607,8 +662,13 @@ class ProfileScreen extends StatelessWidget {
                         onTap: () {
                           if (user == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("User information not available"),
+                              SnackBar(
+                                content: Text(
+                                  "User information not available",
+                                  style: AppTextStyles.body.copyWith(
+                                    color: AppColors.textOnPrimary,
+                                  ),
+                                ),
                               ),
                             );
                             return;
@@ -663,8 +723,13 @@ class ProfileScreen extends StatelessWidget {
                         onTap: () {
                           if (user == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("User information not available"),
+                              SnackBar(
+                                content: Text(
+                                  "User information not available",
+                                  style: AppTextStyles.body.copyWith(
+                                    color: AppColors.textOnPrimary,
+                                  ),
+                                ),
                               ),
                             );
                             return;
@@ -689,12 +754,18 @@ class ProfileScreen extends StatelessWidget {
                         onTap: () {
                           if (user == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("User information not available"),
+                              SnackBar(
+                                content: Text(
+                                  "User information not available",
+                                  style: AppTextStyles.body.copyWith(
+                                    color: AppColors.textOnPrimary,
+                                  ),
+                                ),
                               ),
                             );
                             return;
                           }
+
                           _showDeleteAccountDialog(context, user);
                         },
                       ),
@@ -753,7 +824,6 @@ class ProfileScreen extends StatelessWidget {
                   // SOCIAL MEDIA
                   if (socialItems.isNotEmpty) ...[
                     const SizedBox(height: 10),
-
                     _SocialMediaContainer(
                       items: socialItems,
                       onTap: (type) {
@@ -801,15 +871,14 @@ class _SocialMediaContainer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.public, size: 17, color: AppColors.primary),
-              SizedBox(width: 8),
+              const Icon(Icons.public, size: 17, color: AppColors.primary),
+              const SizedBox(width: 8),
               Text(
                 "Follow Us",
-                style: TextStyle(
+                style: AppTextStyles.body.copyWith(
                   color: Colors.white,
-                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -818,11 +887,11 @@ class _SocialMediaContainer extends StatelessWidget {
 
           const SizedBox(height: 4),
 
-          const Padding(
-            padding: EdgeInsets.only(left: 25),
+          Padding(
+            padding: const EdgeInsets.only(left: 25),
             child: Text(
               "Connect with us on social media",
-              style: TextStyle(color: Colors.white54, fontSize: 10),
+              style: AppTextStyles.small.copyWith(color: Colors.white54),
             ),
           ),
 
@@ -868,9 +937,8 @@ class _SocialButton extends StatelessWidget {
                 child: Text(
                   item.title,
                   maxLines: 1,
-                  style: const TextStyle(
+                  style: AppTextStyles.small.copyWith(
                     color: Colors.white70,
-                    fontSize: 9,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1034,9 +1102,14 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
   void _showMessage(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+        ),
+      ),
+    );
   }
 
   @override
@@ -1063,14 +1136,10 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
             ),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
               "Edit Profile",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.dialogTitle.copyWith(color: Colors.white),
             ),
           ),
         ],
@@ -1084,10 +1153,10 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
               controller: _nameController,
               enabled: !_isLoading,
               textCapitalization: TextCapitalization.words,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: AppTextStyles.body.copyWith(color: Colors.white),
               decoration: InputDecoration(
                 hintText: "Name",
-                hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                hintStyle: AppTextStyles.body.copyWith(color: Colors.white38),
                 prefixIcon: const Icon(
                   Icons.person_outline,
                   color: Colors.white54,
@@ -1112,10 +1181,10 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
             TextField(
               controller: TextEditingController(text: widget.user.email),
               enabled: false,
-              style: const TextStyle(color: Colors.white54, fontSize: 13),
+              style: AppTextStyles.body.copyWith(color: Colors.white54),
               decoration: InputDecoration(
                 hintText: "Email",
-                hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                hintStyle: AppTextStyles.body.copyWith(color: Colors.white38),
                 prefixIcon: const Icon(
                   Icons.email_outlined,
                   color: Colors.white38,
@@ -1140,10 +1209,10 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
             TextField(
               controller: TextEditingController(text: widget.user.phone),
               enabled: false,
-              style: const TextStyle(color: Colors.white54, fontSize: 13),
+              style: AppTextStyles.body.copyWith(color: Colors.white54),
               decoration: InputDecoration(
                 hintText: "Phone",
-                hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                hintStyle: AppTextStyles.body.copyWith(color: Colors.white38),
                 prefixIcon: const Icon(
                   Icons.phone_outlined,
                   color: Colors.white38,
@@ -1189,11 +1258,10 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                     Expanded(
                       child: Text(
                         _formatDate(_selectedDate),
-                        style: TextStyle(
+                        style: AppTextStyles.body.copyWith(
                           color: _selectedDate == null
                               ? Colors.white38
                               : Colors.white,
-                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -1213,10 +1281,10 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
             DropdownButtonFormField<String>(
               value: _selectedGender,
               dropdownColor: const Color(0xff343539),
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: AppTextStyles.body.copyWith(color: Colors.white),
               decoration: InputDecoration(
                 hintText: "Select Gender",
-                hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                hintStyle: AppTextStyles.body.copyWith(color: Colors.white38),
                 prefixIcon: const Icon(
                   Icons.person_outline,
                   color: Colors.white54,
@@ -1240,7 +1308,10 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
               items: _genders.map((gender) {
                 return DropdownMenuItem<String>(
                   value: gender,
-                  child: Text(gender),
+                  child: Text(
+                    gender,
+                    style: AppTextStyles.body.copyWith(color: Colors.white),
+                  ),
                 );
               }).toList(),
               onChanged: _isLoading
@@ -1258,7 +1329,7 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   context.watch<AuthController>().errorMessage!,
-                  style: const TextStyle(color: Colors.redAccent, fontSize: 11),
+                  style: AppTextStyles.small.copyWith(color: Colors.redAccent),
                 ),
               ),
             ],
@@ -1274,9 +1345,9 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
 
                   Navigator.of(context).pop(false);
                 },
-          child: const Text(
+          child: Text(
             "Cancel",
-            style: TextStyle(color: Colors.white60, fontSize: 12),
+            style: AppTextStyles.action.copyWith(color: Colors.white60),
           ),
         ),
         ElevatedButton(
@@ -1299,9 +1370,9 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                     color: Colors.black,
                   ),
                 )
-              : const Text(
+              : Text(
                   "Save",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  style: AppTextStyles.button.copyWith(color: Colors.black),
                 ),
         ),
       ],
@@ -1346,7 +1417,7 @@ class _QuickAction extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               title,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: AppTextStyles.bodySecondary.copyWith(color: Colors.white),
             ),
           ],
         ),
@@ -1405,7 +1476,7 @@ class _ProfileMenuItem extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(color: itemColor, fontSize: 12),
+                  style: AppTextStyles.bodySecondary.copyWith(color: itemColor),
                 ),
               ),
               if (showArrow)
@@ -1517,9 +1588,14 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
   void _showMessage(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTextStyles.body.copyWith(color: AppColors.textOnPrimary),
+        ),
+      ),
+    );
   }
 
   @override
@@ -1546,14 +1622,10 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             ),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
               "Change Password",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.dialogTitle.copyWith(color: Colors.white),
             ),
           ),
         ],
@@ -1561,11 +1633,13 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
             child: Text(
               "Enter your new password",
-              style: TextStyle(color: Colors.white54, fontSize: 12),
+              style: AppTextStyles.bodySecondary.copyWith(
+                color: Colors.white54,
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -1573,10 +1647,10 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             controller: _newPasswordController,
             obscureText: _obscureNewPassword,
             enabled: !_isLoading,
-            style: const TextStyle(color: Colors.white, fontSize: 13),
+            style: AppTextStyles.body.copyWith(color: Colors.white),
             decoration: InputDecoration(
               hintText: "New Password",
-              hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+              hintStyle: AppTextStyles.body.copyWith(color: Colors.white38),
               prefixIcon: const Icon(
                 Icons.lock_outline,
                 color: Colors.white54,
@@ -1615,10 +1689,10 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
             controller: _confirmPasswordController,
             obscureText: _obscureConfirmPassword,
             enabled: !_isLoading,
-            style: const TextStyle(color: Colors.white, fontSize: 13),
+            style: AppTextStyles.body.copyWith(color: Colors.white),
             decoration: InputDecoration(
               hintText: "Confirm Password",
-              hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+              hintStyle: AppTextStyles.body.copyWith(color: Colors.white38),
               prefixIcon: const Icon(
                 Icons.lock_outline,
                 color: Colors.white54,
@@ -1658,7 +1732,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
               alignment: Alignment.centerLeft,
               child: Text(
                 context.watch<AuthController>().errorMessage!,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 11),
+                style: AppTextStyles.small.copyWith(color: Colors.redAccent),
               ),
             ),
           ],
@@ -1673,9 +1747,9 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
                   Navigator.of(context).pop(false);
                 },
-          child: const Text(
+          child: Text(
             "Cancel",
-            style: TextStyle(color: Colors.white60, fontSize: 12),
+            style: AppTextStyles.action.copyWith(color: Colors.white60),
           ),
         ),
         ElevatedButton(
@@ -1698,9 +1772,9 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                     color: Colors.black,
                   ),
                 )
-              : const Text(
+              : Text(
                   "Change",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  style: AppTextStyles.button.copyWith(color: Colors.black),
                 ),
         ),
       ],
